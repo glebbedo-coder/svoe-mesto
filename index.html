@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Своё Место — Волгоград</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & ROOT ── */
+:root{--g:#d4a862;--g2:#8b6914;--bg:#06060e;--b2:#0d0d1a;--b3:#13132a;--bd:#1a1a2e;--tx:#fff;--t2:rgba(255,255,255,.65);--t3:#555}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{height:100%;overflow:hidden}
+body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;max-width:480px;margin:0 auto}
+
+/* ── SPLASH ── */
+#splash{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s,transform .5s}
+#splash.hide{opacity:0;transform:scale(1.04);pointer-events:none}
+.si{font-size:64px;margin-bottom:16px;animation:popIn .7s cubic-bezier(.2,1.4,.4,1);filter:drop-shadow(0 0 28px rgba(212,168,98,.5))}
+.st{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;letter-spacing:-1px}
+.st span{color:var(--g)}
+.ss{font-size:10px;color:var(--t3);letter-spacing:3px;margin-top:6px}
+.sd{display:flex;gap:6px;margin-top:40px}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--g)}
+.sdot:nth-child(1){animation:dp 1s 0s infinite}.sdot:nth-child(2){animation:dp 1s .2s infinite}.sdot:nth-child(3){animation:dp 1s .4s infinite}
+
+/* ── ONBOARDING ── */
+#onboard{position:fixed;inset:0;background:var(--bg);z-index:190;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px}
+#onboard.vis{display:flex}
+.obi{font-size:72px;margin-bottom:24px}
+.obt{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;margin-bottom:12px;line-height:1.2;text-align:center}
+.obd{font-size:14px;color:var(--t3);line-height:1.65;max-width:280px;text-align:center}
+.obds{display:flex;gap:7px;margin:32px 0 28px}
+.obdot{width:7px;height:7px;border-radius:4px;background:#222;transition:all .3s}
+.obdot.act{width:22px;background:var(--g)}
+.obbtn{width:100%;max-width:300px;padding:15px;border-radius:50px;background:linear-gradient(135deg,var(--g),var(--g2));border:none;color:#000;font-family:'DM Sans',sans-serif;font-weight:700;font-size:15px;cursor:pointer}
+.obsk{background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer;margin-top:12px;font-family:'DM Sans',sans-serif}
+
+/* ── HEADER ── */
+#hdr{padding:10px 14px 6px;display:flex;align-items:center;gap:8px;background:rgba(6,6,14,.97);backdrop-filter:blur(12px);border-bottom:1px solid #0d0d1a;flex-shrink:0;z-index:30}
+.logo{flex-shrink:0}
+.lm{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;letter-spacing:-.5px;line-height:1}
+.lm span{color:var(--g)}
+.ls{font-size:8px;color:#2a2a3a;letter-spacing:2px}
+/* Search bar in header */
+#hdr-search{flex:1;position:relative}
+#hdr-sinp{width:100%;background:var(--b2);border:1.5px solid var(--bd);border-radius:12px;padding:8px 36px 8px 12px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+#hdr-sinp:focus{border-color:var(--g)}
+#hdr-sinp::placeholder{color:var(--t3)}
+#hdr-clr{position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:14px;color:var(--t3);display:none;background:none;border:none;color:var(--t3)}
+
+/* ── TABS ── */
+#tabs{display:flex;background:#0a0a16;border-bottom:1px solid #0d0d1a;flex-shrink:0}
+.tab{flex:1;background:none;border:none;cursor:pointer;padding:9px 4px 7px;font-size:18px;color:var(--t3);transition:all .2s;position:relative;border-bottom:2px solid transparent}
+.tab.act{color:var(--tx);border-bottom-color:var(--g)}
+.fbdg{position:absolute;top:5px;right:50%;transform:translateX(8px);font-size:9px;background:var(--g);color:#000;border-radius:8px;padding:1px 4px;font-weight:700;line-height:1.2}
+
+/* ── DISTRICT FILTER (in feed only) ── */
+#dist-bar{display:flex;gap:5px;overflow-x:auto;padding:6px 12px 4px;scrollbar-width:none;flex-shrink:0;background:var(--bg)}
+#dist-bar::-webkit-scrollbar{display:none}
+.dbtn{border:none;cursor:pointer;border-radius:14px;padding:4px 11px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.dbtn.act{background:var(--g);color:#000}
+.dbtn:not(.act){background:var(--b2);color:var(--t3);border:1px solid #111}
+
+/* ── SCROLL AREA ── */
+#main{flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#main::-webkit-scrollbar{width:2px}
+#main::-webkit-scrollbar-thumb{background:#1a1a2e;border-radius:2px}
+.panel{display:none}
+.panel.act{display:block}
+
+/* ── FEED PANEL ── */
+#panel-feed{padding:8px 12px 80px}
+.cat-row{display:flex;gap:5px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+.cat-row::-webkit-scrollbar{display:none}
+.cbtn{border:none;cursor:pointer;border-radius:14px;padding:4px 12px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.cbtn.act{background:linear-gradient(135deg,var(--g),var(--g2));color:#000}
+.cbtn:not(.act){background:var(--b2);color:var(--t3);border:1px solid #111}
+
+/* ── CARD STACK ── */
+#card-area{position:relative;height:calc(100dvh - 200px);min-height:340px;max-height:520px;margin-bottom:10px;user-select:none}
+.card-behind{position:absolute;inset:0;border-radius:20px;transform:scale(.94) translateY(14px);z-index:1;overflow:hidden}
+.card-front{position:absolute;inset:0;border-radius:20px;z-index:2;overflow:hidden;cursor:grab;touch-action:none;background:#111}
+.card-front:active{cursor:grabbing}
+/* Photo as background */
+.card-photo{position:absolute;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat}
+.card-grad{position:absolute;bottom:0;left:0;right:0;height:75%;background:linear-gradient(to top,rgba(0,0,0,.98) 0%,rgba(0,0,0,.7) 45%,transparent 100%);pointer-events:none}
+.card-cat{position:absolute;top:12px;right:12px;z-index:5;background:rgba(0,0,0,.6);border-radius:16px;padding:3px 10px;font-size:10px;color:rgba(255,255,255,.85);backdrop-filter:blur(8px);pointer-events:none}
+.card-dist{position:absolute;top:12px;left:12px;z-index:5;background:rgba(0,0,0,.6);border-radius:16px;padding:3px 10px;font-size:10px;color:rgba(255,255,255,.7);backdrop-filter:blur(8px);pointer-events:none}
+.card-ib{position:absolute;bottom:92px;right:12px;z-index:8;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:14px;cursor:pointer;backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center}
+.card-content{position:absolute;bottom:0;left:0;right:0;padding:14px 14px 10px;pointer-events:none}
+.card-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#fff;line-height:1.1;margin-bottom:3px}
+.card-addr{font-size:10px;font-weight:500;margin-bottom:6px}
+.card-desc{font-size:11px;color:var(--t2);line-height:1.45;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tag{display:inline-block;padding:2px 7px;border-radius:12px;font-size:9px;font-weight:500;margin:1px;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);background:rgba(255,255,255,.06)}
+.card-meta{font-size:9px;color:#444;display:flex;gap:10px;margin-top:5px}
+/* Swipe indicators */
+.sind{position:absolute;top:18px;z-index:10;border:3px solid;border-radius:9px;padding:4px 12px;font-family:'Playfair Display',serif;font-weight:900;font-size:18px;background:rgba(0,0,0,.55);opacity:0;transition:opacity .1s;pointer-events:none}
+.sind.like{left:14px;border-color:#22c55e;color:#22c55e;transform:rotate(-14deg)}
+.sind.nope{right:14px;border-color:#ef4444;color:#ef4444;transform:rotate(14deg)}
+.sind.show{opacity:1}
+
+/* ── ACTION BUTTONS ── */
+.arow{display:flex;align-items:center;justify-content:center;gap:12px;padding:4px 0 2px}
+.ab{border:none;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;transition:transform .15s;flex-shrink:0}
+.ab:active{transform:scale(.88)!important}
+.ab.dl{width:50px;height:50px;background:#120808;border:2px solid #280e0e}
+.ab.un{width:36px;height:36px;background:var(--b2);border:1px solid var(--bd);font-size:14px}
+.ab.fv{width:60px;height:60px;background:linear-gradient(135deg,var(--g),var(--g2));font-size:26px;box-shadow:0 0 24px rgba(212,168,98,.4)}
+.ab.i2{width:36px;height:36px;background:var(--b2);border:1px solid var(--bd);font-size:14px}
+.ab.lk{width:50px;height:50px;background:#081208;border:2px solid #0e280e}
+.swipe-hint{text-align:center;font-size:9px;color:#1e1e1e;margin-top:4px}
+
+/* ── DONE STATE ── */
+.done{text-align:center;padding:40px 16px}
+
+/* ── LEADERBOARD ── */
+#panel-top{padding:12px 14px 80px}
+.panel-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;margin-bottom:2px}
+.psub{font-size:9px;color:#333;letter-spacing:1.5px;margin-bottom:12px}
+.period-row{display:flex;gap:5px;margin-bottom:16px}
+.pb{flex:1;padding:7px 0;border-radius:16px;border:1px solid #111;background:transparent;color:#444;font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;transition:all .2s}
+.pb.act{border-color:var(--g);background:rgba(212,168,98,.1);color:var(--g)}
+.lr{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #0d0d0d;cursor:pointer}
+.lrank{font-size:22px;width:28px;text-align:center;flex-shrink:0}
+.lnum{font-size:13px;font-weight:700;color:#333;width:28px;text-align:center;flex-shrink:0}
+.lthumb{width:42px;height:42px;border-radius:11px;flex-shrink:0;background:#111}
+.li{flex:1;min-width:0}
+.lname{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lmeta{font-size:10px;color:#444;margin-top:1px}
+.lsv{font-family:'Playfair Display',serif;font-size:16px;font-weight:900;color:var(--g);text-align:right}
+.lsl{font-size:9px;color:#333;text-align:right}
+.fbox{margin-top:16px;background:var(--b2);border-radius:13px;padding:13px;border:1px solid var(--b3);font-size:11px;color:var(--t2);line-height:1.8}
+
+/* ── FAVORITES ── */
+#panel-saved{padding:12px 14px 80px}
+.fc{background:var(--b2);border:1px solid var(--b3);border-radius:15px;padding:12px;margin-bottom:9px;display:flex;gap:10px;align-items:center;cursor:pointer}
+.ft{width:50px;height:50px;border-radius:12px;flex-shrink:0;background:#111}
+.fi{flex:1;min-width:0}
+.fn{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;margin-bottom:1px}
+.fa{font-size:10px;color:#444;margin-bottom:5px}
+.fdel{background:none;border:none;color:#222;font-size:17px;cursor:pointer;padding:3px;transition:color .2s;flex-shrink:0}
+.fdel:hover{color:#ef4444}
+.es{text-align:center;padding:48px 16px}
+
+/* ── PROFILE ── */
+#panel-profile{padding:12px 14px 80px}
+.ph{background:linear-gradient(135deg,var(--b3),#1a1a3a);border-radius:16px;padding:20px;text-align:center;margin-bottom:14px;border:1px solid var(--bd)}
+.pav{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--g2));display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 10px;overflow:hidden}
+.pav img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.pname{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;margin-bottom:3px}
+.pusr{font-size:11px;color:var(--t3)}
+.psg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:14px}
+.psc{background:var(--b2);border-radius:11px;padding:11px 6px;text-align:center;border:1px solid var(--b3)}
+.psv{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--g)}
+.psl{font-size:9px;color:#555;margin-top:1px}
+.psec{background:var(--b2);border-radius:13px;padding:14px;margin-bottom:11px;border:1px solid var(--b3)}
+.psec-title{font-size:9px;color:#333;letter-spacing:1.5px;margin-bottom:10px}
+.wip{background:rgba(212,168,98,.06);border:1px dashed rgba(212,168,98,.3);border-radius:13px;padding:14px;text-align:center;margin-bottom:11px}
+.fbbtn{width:100%;padding:13px;border-radius:13px;background:linear-gradient(135deg,var(--g),var(--g2));border:none;color:#000;font-family:'DM Sans',sans-serif;font-weight:700;font-size:14px;cursor:pointer;margin-top:6px}
+
+/* ── SEARCH RESULTS ── */
+#panel-search{padding:12px 14px 80px}
+.gs-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #0d0d0d;cursor:pointer}
+.gs-thumb{width:46px;height:46px;border-radius:11px;flex-shrink:0;background:#111}
+.gs-info{flex:1;min-width:0}
+.gs-name{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gs-sub{font-size:10px;color:#555;margin-top:1px}
+.gs-right{text-align:right;flex-shrink:0}
+.gs-r{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--g)}
+.gs-c{font-size:9px;color:#444}
+mark.hl{background:rgba(212,168,98,.3);border-radius:2px;padding:0 1px;color:inherit}
+
+/* ── RANDOM ── */
+#panel-random{padding:12px 14px 80px;text-align:center}
+
+/* ── DETAIL SHEET ── */
+.so{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.8);display:none;align-items:flex-end}
+.so.open{display:flex;animation:fadeIn .2s ease}
+.sh{background:#0c0c1a;border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;border:1px solid var(--b3);border-bottom:none;width:100%;animation:slideUp .3s cubic-bezier(.2,1,.3,1)}
+.sh::-webkit-scrollbar{width:2px}
+/* Photo gallery in sheet */
+.det-gallery{position:relative;height:200px;overflow:hidden;border-radius:20px 20px 0 0}
+.det-main-photo{width:100%;height:100%;background-size:cover;background-position:center}
+.det-gallery-strip{display:flex;gap:4px;padding:8px 14px 0}
+.gthumb{width:60px;height:48px;border-radius:8px;cursor:pointer;opacity:.7;transition:opacity .2s;flex-shrink:0}
+.gthumb.active{opacity:1;outline:2px solid var(--g)}
+.sh-close{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5}
+.sbod{padding:14px 14px 32px}
+.sname{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;line-height:1.1}
+.srat{color:#000;font-weight:700;font-size:13px;padding:3px 9px;border-radius:16px;flex-shrink:0}
+.sdesc{font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:10px}
+.mr{display:flex;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #0d0d0d}
+.mi{font-size:15px;width:22px;flex-shrink:0}
+.ml{font-size:10px;color:#444;width:90px;flex-shrink:0}
+.mv{font-size:12px;color:#aaa}
+.mvl{font-size:12px;color:var(--g);text-decoration:none}
+.sstats{display:flex;gap:6px;margin:14px 0 16px}
+.sst{flex:1;background:var(--b2);border-radius:11px;padding:10px 5px;text-align:center;border:1px solid var(--b3)}
+.ssti{font-size:16px;margin-bottom:3px}
+.sstv{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--g)}
+.sstl{font-size:9px;color:#444}
+.sctas{display:flex;gap:6px}
+.cm2{flex:1;padding:12px 0;border-radius:12px;background:linear-gradient(135deg,var(--g),var(--g2));border:none;color:#000;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer}
+.ci{width:44px;padding:12px 0;border-radius:12px;background:var(--b3);border:1px solid var(--bd);color:var(--tx);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none}
+
+/* ── FEEDBACK SHEET ── */
+#fb-ov .sh{padding:18px 14px 36px}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:rgba(10,10,22,.97);color:var(--tx);padding:9px 20px;border-radius:24px;font-size:12px;font-weight:500;border:1px solid var(--g);white-space:nowrap;z-index:500;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{opacity:1}
+
+/* ── IMAGE LOADING ── */
+.card-photo{background:#0d0d1a}
+
+/* ── ANIMATIONS ── */
+@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes dp{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.3);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="si">🏛️</div>
+  <div class="st">СВОЁ <span>МЕСТО</span></div>
+  <div class="ss">ВОЛГОГРАД</div>
+  <div class="sd"><div class="sdot"></div><div class="sdot"></div><div class="sdot"></div></div>
+</div>
+
+<!-- ONBOARDING -->
+<div id="onboard">
+  <div id="obc"></div>
+  <div class="obds" id="obds"></div>
+  <button class="obbtn" id="obnx">Далее →</button>
+  <button class="obsk" id="obsk">Пропустить</button>
+</div>
+
+<!-- HEADER with integrated search -->
+<div id="hdr" style="display:none">
+  <div class="logo">
+    <div class="lm">СВОЁ <span>МЕСТО</span></div>
+    <div class="ls">ВОЛГОГРАД</div>
+  </div>
+  <div id="hdr-search">
+    <input id="hdr-sinp" type="text" placeholder="🔍  Найти заведение..." autocomplete="off">
+    <button id="hdr-clr" onclick="clearHdrSearch()">✕</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div id="tabs" style="display:none">
+  <button class="tab act" data-tab="feed">🃏</button>
+  <button class="tab" data-tab="top">🏆</button>
+  <button class="tab" data-tab="saved">❤️<span class="fbdg" id="fbdg" style="display:none">0</span></button>
+  <button class="tab" data-tab="random">🎲</button>
+  <button class="tab" data-tab="profile">👤</button>
+</div>
+
+<!-- DISTRICT FILTER (feed only) -->
+<div id="dist-bar" style="display:none"></div>
+
+<!-- MAIN -->
+<div id="main" style="display:none">
+
+  <!-- FEED -->
+  <div class="panel act" id="panel-feed">
+    <div class="cat-row" id="cat-row"></div>
+    <div id="feed-content"></div>
+  </div>
+
+  <!-- SEARCH RESULTS (shown when typing in header) -->
+  <div class="panel" id="panel-search">
+    <div id="gs-info" style="font-size:9px;color:#333;letter-spacing:1.5px;padding:0 0 10px">ВСЕ ЗАВЕДЕНИЯ · ПО РЕЙТИНГУ</div>
+    <div id="gs-list"></div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="panel" id="panel-top">
+    <div class="panel-title">Лидеры <span style="color:var(--g)">города</span></div>
+    <div class="psub">РЕАЛЬНЫЕ ГОЛОСА ЖИТЕЛЕЙ</div>
+    <div class="period-row" id="prow"></div>
+    <div id="lbl"></div>
+    <div class="fbox">👍 Лайк = 1 очко &nbsp;·&nbsp; ❤️ Избранное = 2 очка<br>Рейтинг обновляется в реальном времени</div>
+  </div>
+
+  <!-- FAVORITES -->
+  <div class="panel" id="panel-saved">
+    <div class="panel-title">Избранное</div>
+    <div class="psub">МЕСТА ДЛЯ СЛЕДУЮЩЕГО ВИЗИТА</div>
+    <div id="favl"></div>
+  </div>
+
+  <!-- RANDOM -->
+  <div class="panel" id="panel-random">
+    <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:4px;text-align:center">Не можешь выбрать?</div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:24px;text-align:center">Нажми — судьба решит за тебя</div>
+    <div style="position:relative;width:240px;height:240px;margin:0 auto 22px">
+      <canvas id="spin-canvas" width="240" height="240" style="border-radius:50%;display:block"></canvas>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;background:var(--bg);border:3px solid var(--g);display:flex;align-items:center;justify-content:center;font-size:20px;z-index:10;box-shadow:0 0 0 4px var(--bg)">🎲</div>
+      <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:16px solid var(--g);z-index:11"></div>
+    </div>
+    <button id="spin-btn" onclick="doSpin()" style="background:linear-gradient(135deg,var(--g),var(--g2));border:none;color:#000;font-family:'DM Sans',sans-serif;font-weight:700;font-size:16px;padding:14px 0;border-radius:46px;cursor:pointer;width:100%;max-width:260px;box-shadow:0 0 24px rgba(212,168,98,.4)">🎰 Крутить!</button>
+    <div id="spin-result" style="display:none;margin-top:22px">
+      <div style="font-size:9px;color:#555;letter-spacing:2px;margin-bottom:10px;text-align:center">СУДЬБА ВЫБРАЛА</div>
+      <div id="spin-card" style="background:var(--b2);border-radius:16px;padding:16px;border:1px solid var(--bd);cursor:pointer;text-align:left" onclick="openDetailFromSpin()"></div>
+      <button onclick="doSpin()" style="margin-top:12px;background:transparent;border:1px solid var(--bd);color:var(--t3);font-family:'DM Sans',sans-serif;font-size:12px;padding:10px 0;border-radius:40px;cursor:pointer;width:100%;max-width:260px">Ещё раз 🔄</button>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="panel" id="panel-profile">
+    <div id="profile-content"></div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- DETAIL SHEET -->
+<div class="so" id="det-ov">
+  <div class="sh" id="det-sh"></div>
+</div>
+
+<!-- FEEDBACK SHEET -->
+<div class="so" id="fb-ov">
+  <div class="sh">
+    <div class="sbod">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="sname">Обратная связь</div>
+        <button class="sh-close" style="position:static" onclick="cS('fb-ov')">✕</button>
+      </div>
+      <p style="font-size:12px;color:var(--t3);margin-bottom:16px;line-height:1.6">Что нравится? Чего не хватает? Какие заведения добавить?</p>
+      <textarea id="fbt" placeholder="Напиши здесь..." style="width:100%;min-height:100px;background:var(--b2);border:1px solid var(--bd);border-radius:11px;padding:11px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:12px;resize:none;outline:none"></textarea>
+      <button onclick="sendFB()" style="width:100%;margin-top:10px;padding:12px;border-radius:12px;background:linear-gradient(135deg,var(--g),var(--g2));border:none;color:#000;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer">Отправить 📨</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// FIREBASE
+// ══════════════════════════════════════════════════════
+const FB_CFG = {
+  apiKey:"AIzaSyCsM2AFalb0BGApo9oNBYt4XufCYJIEtm8",
+  authDomain:"svoe-mesto.firebaseapp.com",
+  databaseURL:"https://svoe-mesto-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"svoe-mesto",
+  storageBucket:"svoe-mesto.firebasestorage.app",
+  messagingSenderId:"927140581138",
+  appId:"1:927140581138:web:374cc4413f28de93d52dcb"
+};
+let fbDb = null;
+function initFB() {
+  try {
+    firebase.initializeApp(FB_CFG);
+    fbDb = firebase.database();
+    fbDb.ref('/scores').on('value', snap => {
+      S.fbScores = snap.val() || {};
+      if (S.tab === 'top') renderLB(S.fbScores);
+    });
+  } catch(e){ console.warn('FB:', e.message); }
+}
+function fbVote(id, isLike, isSave) {
+  if (!fbDb) return;
+  fbDb.ref('/scores/'+id).transaction(c => {
+    const d = c || {likes:0,saves:0,dislikes:0};
+    if (isSave) d.saves = (d.saves||0)+1;
+    else if (isLike) d.likes = (d.likes||0)+1;
+    else d.dislikes = (d.dislikes||0)+1;
+    return d;
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// VENUES DATA
+// ══════════════════════════════════════════════════════
+const VENUES = [
+// ═══ ЦЕНТРАЛЬНЫЙ РАЙОН (20) ═══
+  {id:1,  n:"Solo Vicini",            cat:"Ресторан", ic:"🍝", bg:"linear-gradient(145deg,#0a0a00,#1e1a00,#2d2600)", ac:"#d4af37", p:"₽₽₽", r:4.9, addr:"Аллея Героев, 1",              dist:"Центральный",      ph:"+7 8442 23-90-09", h:"12:00–00:00", ig:"solovicini_vlg",   tags:["Итальянская","Терраса","Живая музыка","Вино"],    desc:"Лучший итальянский ресторан города. Паста ручной лепки, трюфельные ризотто и вина из Тосканы. Панорамная терраса с видом на Волгу.", photo:"https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:2,  n:"Казан-Мангал",           cat:"Ресторан", ic:"🫕", bg:"linear-gradient(145deg,#150800,#2d1500,#4a2200)", ac:"#f59e0b", p:"₽₽",  r:4.8, addr:"ул. Краснознаменская, 12",    dist:"Центральный",      ph:"+7 8442 23-68-00", h:"11:00–23:00", ig:"kazan_mangal_vlg", tags:["Кавказская","Хинкали","Мангал","Бронь"],          desc:"Лучшая кавказская кухня Волгограда. Свежие хинкали, шашлыки на углях, долма. Щедрые порции и тёплый сервис.", photo:"https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:3,  n:"Grinго's Гастробар",     cat:"Бар",      ic:"🌮", bg:"linear-gradient(145deg,#0a0000,#200800,#381200)", ac:"#ef4444", p:"₽₽",  r:4.8, addr:"ул. Невская, 9",               dist:"Центральный",      ph:"+7 8442 26-58-22", h:"12:00–02:00", ig:"gringos_vlg",      tags:["Гастробар","Бургеры","Коктейли","DJ"],            desc:"Гастробар с лучшими бургерами и авторскими коктейлями. Живая музыка и DJ по выходным.", photo:"https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:4,  n:"Вкусный Дом",            cat:"Ресторан", ic:"🥩", bg:"linear-gradient(145deg,#080300,#180900,#2d1200)", ac:"#dc2626", p:"₽₽₽", r:4.7, addr:"ул. Маршала Чуйкова, 19",     dist:"Центральный",      ph:"+7 8442 97-76-88", h:"12:00–23:00", ig:"vkusnyy_dom",      tags:["Стейки","Терраса","Европейская","Вино"],          desc:"Стейк-хаус с летней верандой. Мясо на углях, изысканное вино, безупречный сервис.", photo:"https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:5,  n:"Раковарня",              cat:"Бар",      ic:"🦀", bg:"linear-gradient(145deg,#0a0000,#1f0505,#300a0a)", ac:"#f87171", p:"₽₽",  r:4.6, addr:"ул. Рабоче-Крестьянская, 22", dist:"Центральный",      ph:"+7 8442 60-60-60", h:"12:00–02:00", ig:"rakovarnya_vlg",   tags:["Раки","Пиво","Морепродукты","Спорт"],             desc:"Русский паб со свежими раками. Крафтовое пиво, трансляции матчей и народная атмосфера.", photo:"https://images.unsplash.com/photo-1514190051997-0f6f39ca5cde?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1484980972926-edee96e0960d?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:6,  n:"Маяк",                   cat:"Ресторан", ic:"🏮", bg:"linear-gradient(145deg,#020c1a,#071e38,#0a3060)", ac:"#4fc3f7", p:"₽₽",  r:4.6, addr:"Набережная 62-й Армии, 1",    dist:"Центральный",      ph:"+7 8442 23-24-25", h:"12:00–00:00", ig:"mayak_vlg",        tags:["Вид на Волгу","Живая музыка","Терраса","Бронь"],  desc:"Классический ресторан на набережной Волги. Живая музыка по выходным и панорамный вид на реку.", photo:"https://images.unsplash.com/photo-1600891964092-4316c288032e?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:7,  n:"Бамберг",                cat:"Ресторан", ic:"🍻", bg:"linear-gradient(145deg,#080400,#181000,#281800)", ac:"#f59e0b", p:"₽₽",  r:4.5, addr:"ул. Советская, 20",            dist:"Центральный",      ph:"+7 8442 36-46-56", h:"11:00–00:00", ig:"bamberg_vlg",      tags:["Немецкая","Пиво","Колбаски","Терраса"],           desc:"Немецкий ресторан с собственной пивоварней. Колбаски, рульки и живое баварское пиво.", photo:"https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:8,  n:"Персонажи",              cat:"Кафе",     ic:"🎭", bg:"linear-gradient(145deg,#0a0a00,#1a1a00,#282800)", ac:"#a3e635", p:"₽₽",  r:4.5, addr:"Набережная 62-й Армии, 6",    dist:"Центральный",      ph:"+7 8442 97-23-10", h:"09:00–23:00", ig:"personazhi_vlg",   tags:["Авторская","Набережная","Завтраки","Wi-Fi"],      desc:"Уютное кафе на набережной с авторскими блюдами и отличными завтраками.", photo:"https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:9,  n:"Вилла Капри",            cat:"Ресторан", ic:"🌿", bg:"linear-gradient(145deg,#050a00,#0f1e00,#182e00)", ac:"#84cc16", p:"₽₽₽", r:4.5, addr:"ул. Комсомольская, 2А",        dist:"Центральный",      ph:"+7 8442 97-51-10", h:"12:00–00:00", ig:"villa_capri_vlg",  tags:["Итальянская","Терраса","Романтика","Вино"],       desc:"Итальянский ресторан с летней верандой. Пицца из дровяной печи, паста и вина.", photo:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:10, n:"Швейк",                  cat:"Ресторан", ic:"🍺", bg:"linear-gradient(145deg,#060300,#120800,#1e0e00)", ac:"#d97706", p:"₽₽",  r:4.4, addr:"ул. Советская, 3",             dist:"Центральный",      ph:"+7 8442 38-14-58", h:"11:00–00:00", ig:"shveyk_vlg",       tags:["Чешская","Пиво","Гуляш","Wi-Fi"],                desc:"Чешский ресторан. Разливное пиво, гуляш и свиное колено в атмосфере пражской пивнушки.", photo:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:11, n:"Руставели",              cat:"Ресторан", ic:"🥘", bg:"linear-gradient(145deg,#0a0500,#1e1000,#2d1800)", ac:"#ef4444", p:"₽₽",  r:4.4, addr:"ул. Краснознаменская, 12",    dist:"Центральный",      ph:"+7 8442 23-68-01", h:"11:00–23:00", ig:"rustaveli_vlg",    tags:["Грузинская","Хачапури","Хинкали","Вино"],         desc:"Грузинский ресторан с настоящими рецептами. Хачапури по-аджарски и домашнее вино.", photo:"https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1484980972926-edee96e0960d?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:12, n:"Траттория Римини",       cat:"Ресторан", ic:"🇮🇹", bg:"linear-gradient(145deg,#0c0005,#200a15,#301525)", ac:"#e879f9", p:"₽₽",  r:4.4, addr:"ул. Советская, 27",            dist:"Центральный",      ph:"+7 8442 97-22-80", h:"12:00–00:00", ig:"rimini_vlg",       tags:["Итальянская","Пицца","Паста","Терраса"],          desc:"Семейная траттория с итальянской атмосферой. Пицца, паста и большой выбор вин.", photo:"https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:13, n:"Nosorog",                cat:"Ресторан", ic:"🦏", bg:"linear-gradient(145deg,#050a00,#0d1e00,#152e00)", ac:"#22c55e", p:"₽₽",  r:4.3, addr:"ул. Мира, 20",                 dist:"Центральный",      ph:"+7 8442 97-34-44", h:"12:00–00:00", ig:"nosorog_vlg",      tags:["Европейская","Бизнес-ланч","Бар","Wi-Fi"],        desc:"Ресторан-бар в центре. Европейская кухня и отличный бизнес-ланч.", photo:"https://images.unsplash.com/photo-1519984388953-d2406bc725e1?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:14, n:"Лондон",                 cat:"Ресторан", ic:"🎩", bg:"linear-gradient(145deg,#050510,#0e0e28,#181840)", ac:"#818cf8", p:"₽₽₽", r:4.4, addr:"ул. Краснознаменская, 25Б",   dist:"Центральный",      ph:"+7 8442 97-88-21", h:"12:00–00:00", ig:"london_vlg",       tags:["Европейская","Коктейли","Живая музыка","VIP"],    desc:"Ресторан в британском стиле. Изысканная кухня, правильные коктейли и живая музыка.", photo:"https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:15, n:"Бочка",                  cat:"Бар",      ic:"🛢️", bg:"linear-gradient(145deg,#060300,#140800,#201000)", ac:"#f59e0b", p:"₽",   r:4.3, addr:"ул. Советская, 16",            dist:"Центральный",      ph:"+7 8442 97-78-90", h:"12:00–02:00", ig:"bochka_vlg",       tags:["Пиво","Спорт","Недорого","Закуски"],              desc:"Пивной ресторан с крафтом. Трансляции матчей и вкусные закуски по доступным ценам.", photo:"https://images.unsplash.com/photo-1578474846511-04ba529f0b88?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:16, n:"Ледникъ",                cat:"Бар",      ic:"🧊", bg:"linear-gradient(145deg,#001520,#002d42,#004060)", ac:"#7dd3fc", p:"₽₽",  r:4.2, addr:"ул. 10-й Дивизии НКВД, 5А",  dist:"Центральный",      ph:"+7 8442 97-09-09", h:"17:00–04:00", ig:"lednik_bar",       tags:["Коктейли","DJ","Танцпол","Крафт"],                desc:"Атмосферный бар. Коктейльная карта из 60 позиций, еженедельные DJ-сеты.", photo:"https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:17, n:"Массимо",                cat:"Кофейня",  ic:"☕", bg:"linear-gradient(145deg,#0a0500,#201000,#301800)", ac:"#d4a862", p:"₽₽",  r:4.3, addr:"ул. Мира, 12",                 dist:"Центральный",      ph:"+7 8442 52-81-22", h:"08:00–22:00", ig:"massimo_cafe_vlg", tags:["Кофе","Завтраки","Wi-Fi","Десерты"],              desc:"Кафе в сердце города. Отличный кофе, завтраки и десерты собственного приготовления.", photo:"https://images.unsplash.com/photo-1511920170033-f8396924c348?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1484980972926-edee96e0960d?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:18, n:"Hampton Hilton",         cat:"Ресторан", ic:"🏨", bg:"linear-gradient(145deg,#080010,#150025,#1e0038)", ac:"#a78bfa", p:"₽₽₽", r:4.5, addr:"ул. Профсоюзная, 13",          dist:"Центральный",      ph:"+7 8442 41-00-00", h:"07:00–23:00", ig:"hamptonvolgograd", tags:["Завтраки","Европейская","Отель","Бизнес"],         desc:"Ресторан отеля Hilton. Шведский стол на завтрак, европейская кухня и безупречный сервис.", photo:"https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:19, n:"Nebar",                  cat:"Бар",      ic:"🍸", bg:"linear-gradient(145deg,#05000a,#0e0020,#160033)", ac:"#c084fc", p:"₽₽",  r:4.3, addr:"ул. Калинина, 6",               dist:"Центральный",      ph:"+7 8442 55-55-10", h:"16:00–03:00", ig:"nebar_vlg",        tags:["Коктейли","Паназиатская","Японская","Вечеринки"], desc:"Бар, в котором #МожноВсё. Авторские коктейли и паназиатская кухня.", photo:"https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:20, n:"На Аллее",               cat:"Кофейня",  ic:"🌳", bg:"linear-gradient(145deg,#021000,#083000,#0c4800)", ac:"#4ade80", p:"₽",   r:4.1, addr:"Аллея Героев, 3",              dist:"Центральный",      ph:"+7 8442 23-15-00", h:"09:00–22:00", ig:"na_allee_vlg",     tags:["Кофе","Выпечка","Быстро","Недорого"],             desc:"Кафе на Аллее Героев — лучшее место для кофе на прогулке. Выпечка и демократичные цены.", photo:"https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop&q=80&auto=format"]},
+
+// ═══ ВОРОШИЛОВСКИЙ РАЙОН (10) ═══
+  {id:21, n:"Слиffки Общества",       cat:"Ресторан", ic:"🦢", bg:"linear-gradient(145deg,#0a0010,#180028,#260040)", ac:"#c084fc", p:"₽₽₽", r:4.7, addr:"ул. Рабоче-Крестьянская, 10",dist:"Ворошиловский",    ph:"+7 8442 60-66-60", h:"12:00–02:00", ig:"slivki_vlg",       tags:["Авторская","Живая музыка","Шоу","VIP"],           desc:"Главный ресторан района с авторской кухней и яркими шоу-программами. Живая музыка каждый вечер.", photo:"https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:22, n:"Marusya",                cat:"Кафе",     ic:"🌺", bg:"linear-gradient(145deg,#120000,#2d0a0a,#3d1010)", ac:"#f87171", p:"₽₽",  r:4.5, addr:"ул. Рабоче-Крестьянская, 9Б",dist:"Ворошиловский",    ph:"+7 8442 60-30-10", h:"09:00–23:00", ig:"marusya_vlg",      tags:["Русская","Завтраки","Пироги","Wi-Fi"],            desc:"Домашняя русская кухня. Знаменитые пироги по бабушкиным рецептам и вкусные завтраки.", photo:"https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:23, n:"Сыроварня",              cat:"Ресторан", ic:"🧀", bg:"linear-gradient(145deg,#0a0800,#1a1500,#2a2000)", ac:"#fde68a", p:"₽₽",  r:4.4, addr:"ул. Рабоче-Крестьянская, 22",dist:"Ворошиловский",    ph:"+7 8442 60-55-55", h:"11:00–23:00", ig:"syrovarnya_vlg",   tags:["Русская","Сыры","Европейская","Бизнес-ланч"],     desc:"Ресторан Novikov Group. Авторская кухня с акцентом на русские сыры и фермерские продукты.", photo:"https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1484980972926-edee96e0960d?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:24, n:"Plaza",                  cat:"Ресторан", ic:"✨", bg:"linear-gradient(145deg,#08050a,#141028,#1e183d)", ac:"#818cf8", p:"₽₽₽", r:4.4, addr:"ул. Новоузенская, 2/1",        dist:"Ворошиловский",    ph:"+7 8442 67-77-07", h:"12:00–00:00", ig:"plaza_vlg",        tags:["Европейская","Банкеты","Живая музыка","Вино"],    desc:"Ресторан для торжеств и деловых встреч. Европейская кухня и большой банкетный зал.", photo:"https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:25, n:"Сказка",                 cat:"Кафе",     ic:"🧁", bg:"linear-gradient(145deg,#0a0010,#15001a,#1e0025)", ac:"#e879f9", p:"₽₽",  r:4.4, addr:"ул. Рабоче-Крестьянская, 38А",dist:"Ворошиловский",   ph:"+7 8442 60-40-40", h:"10:00–22:00", ig:"skazka_vlg",       tags:["Торты","Десерты","Семейное","Детям"],             desc:"Кафе-кондитерская с волшебными тортами и десертами. Любимое место семей с детьми.", photo:"https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:26, n:"Бульон",                 cat:"Кафе",     ic:"🍲", bg:"linear-gradient(145deg,#050a00,#101e00,#182e00)", ac:"#86efac", p:"₽",   r:4.3, addr:"ул. Рабоче-Крестьянская, 16",dist:"Ворошиловский",    ph:"+7 8442 60-10-20", h:"09:00–22:00", ig:"bulyion_vlg",      tags:["Домашняя","Супы","Недорого","Обеды"],             desc:"Уютное кафе с домашней едой. Вкусные супы и горячие обеды как у мамы.", photo:"https://images.unsplash.com/photo-1525193612562-0ec53b0e5d7c?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:27, n:"Трактир на Ардатовской", cat:"Кафе",     ic:"🥃", bg:"linear-gradient(145deg,#080400,#160c00,#221400)", ac:"#d97706", p:"₽₽",  r:4.3, addr:"ул. Ардатовская, 29",          dist:"Ворошиловский",    ph:"+7 8442 60-50-50", h:"11:00–23:00", ig:"traktir_ardatov",  tags:["Русская","Бильярд","Банкеты","Недорого"],         desc:"Русский трактир с домашней кухней и бильярдом. Популярное место для дружеских посиделок.", photo:"https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:28, n:"Гранат",                 cat:"Кафе",     ic:"💎", bg:"linear-gradient(145deg,#120005,#280010,#3d0018)", ac:"#fb7185", p:"₽₽",  r:4.3, addr:"ул. Грановитая, 2А",           dist:"Ворошиловский",    ph:"+7 8442 60-90-90", h:"10:00–23:00", ig:"granat_vlg",       tags:["Банкеты","Европейская","Романтика","Бронь"],      desc:"Кафе с изысканным залом для торжеств. Вкусная кухня и уютная атмосфера для любого повода.", photo:"https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:29, n:"Baguette",               cat:"Кофейня",  ic:"🥐", bg:"linear-gradient(145deg,#100800,#221500,#302000)", ac:"#fbbf24", p:"₽",   r:4.2, addr:"ул. Рабоче-Крестьянская, 48",dist:"Ворошиловский",    ph:"+7 8442 60-20-20", h:"07:00–21:00", ig:"baguette_vlg",     tags:["Выпечка","Кофе","Десерты","Завтраки"],            desc:"Французская кондитерская. Свежие круассаны, тарты и эклеры каждое утро.", photo:"https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1484980972926-edee96e0960d?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:30, n:"Княгининский Дворъ",     cat:"Ресторан", ic:"🏰", bg:"linear-gradient(145deg,#060302,#120800,#1e1000)", ac:"#a16207", p:"₽₽₽", r:4.2, addr:"ул. Академическая, 8",         dist:"Ворошиловский",    ph:"+7 8442 67-50-00", h:"12:00–23:00", ig:"knyaginins_vlg",   tags:["Дичь","Охотничья","Банкеты","Редкие блюда"],     desc:"Ресторан охотничьей кухни. Блюда из перепелки, фазана и кабана в интерьере царской эпохи.", photo:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop&q=80&auto=format"]},
+
+// ═══ ДЗЕРЖИНСКИЙ РАЙОН (6) ═══
+  {id:31, n:"Ресторация Слиffки",     cat:"Ресторан", ic:"🦚", bg:"linear-gradient(145deg,#050010,#0f0028,#180040)", ac:"#a855f7", p:"₽₽₽", r:4.6, addr:"ул. им. Хользунова, 38",       dist:"Дзержинский",      ph:"+7 8442 97-75-75", h:"12:00–02:00", ig:"slivki_dzerzh",    tags:["Авторская","Банкеты","Живая музыка","VIP"],       desc:"Главный ресторан района. Авторская кухня, живая музыка и торжественная атмосфера.", photo:"https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:32, n:"Ай да Хуторок",          cat:"Ресторан", ic:"🌾", bg:"linear-gradient(145deg,#060300,#141000,#201800)", ac:"#f59e0b", p:"₽₽",  r:4.5, addr:"ул. Историческая, 155",         dist:"Дзержинский",      ph:"+7 8442 97-99-97", h:"11:00–23:00", ig:"ay_da_khutorok",   tags:["Казачья","Русская","Банкеты","Большой зал"],      desc:"Ресторанный комплекс в казачьем стиле. Традиционная русская кухня, большие залы для торжеств.", photo:"https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:33, n:"Золотая Прага",          cat:"Бар",      ic:"🍺", bg:"linear-gradient(145deg,#060400,#121000,#1c1800)", ac:"#fbbf24", p:"₽₽",  r:4.4, addr:"ул. Историческая, 175",         dist:"Дзержинский",      ph:"+7 8442 97-10-20", h:"12:00–02:00", ig:"zolotaya_praga",   tags:["Чешское пиво","Спорт","Закуски","Европейская"],   desc:"Бар с чешским разливным пивом. Трансляции спортивных событий и вкусные закуски.", photo:"https://images.unsplash.com/photo-1566417713940-fe7c737a9ef2?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:34, n:"Юность",                 cat:"Кафе",     ic:"🌈", bg:"linear-gradient(145deg,#001018,#002230,#003850)", ac:"#38bdf8", p:"₽",   r:4.3, addr:"пр. им. Ленина, 220",           dist:"Дзержинский",      ph:"+7 8442 97-20-30", h:"08:00–22:00", ig:"yunost_cafe_vlg",  tags:["Бизнес-ланч","Недорого","Завтраки","Wi-Fi"],      desc:"Народное кафе с вкусными обедами. Бизнес-ланч каждый будний день по доступным ценам.", photo:"https://images.unsplash.com/photo-1508424757105-b6d5ad9329d0?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:35, n:"Перцы Пицца",            cat:"Кафе",     ic:"🍕", bg:"linear-gradient(145deg,#100000,#280000,#3d0000)", ac:"#ef4444", p:"₽",   r:4.2, addr:"ул. Рабоче-Крестьянская, 48", dist:"Дзержинский",      ph:"+7 8442 60-75-75", h:"10:00–23:00", ig:"percy_pizza_vlg",  tags:["Пицца","Доставка","Семейное","Недорого"],         desc:"Пиццерия с большим выбором пицц. Свежие ингредиенты и быстрая доставка.", photo:"https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1484980972926-edee96e0960d?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:36, n:"Кафе на Калинина",       cat:"Кафе",     ic:"🎱", bg:"linear-gradient(145deg,#050510,#0e0e20,#181830)", ac:"#818cf8", p:"₽",   r:4.1, addr:"ул. Калинина, 18",              dist:"Дзержинский",      ph:"+7 8442 97-55-44", h:"10:00–02:00", ig:"kalinin_cafe_vlg", tags:["Бильярд","Недорого","Спорт","Вечеринки"],         desc:"Кафе с бильярдным залом. Расслабленная атмосфера и доступные цены.", photo:"https://images.unsplash.com/photo-1525193612562-0ec53b0e5d7c?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop&q=80&auto=format"]},
+
+// ═══ КРАСНООКТЯБРЬСКИЙ РАЙОН (7) ═══
+  {id:37, n:"Корона",                 cat:"Ресторан", ic:"👑", bg:"linear-gradient(145deg,#0a0000,#200505,#300a0a)", ac:"#fca5a5", p:"₽₽",  r:4.3, addr:"ул. Маршала Ерёменко, 51",     dist:"Краснооктябрьский",ph:"+7 8442 55-10-10",  h:"11:00–23:00", ig:"korona_vlg",       tags:["Европейская","Банкеты","Живая музыка","Бронь"],   desc:"Ресторан с богатым интерьером. Европейская кухня и живая музыка для торжеств.", photo:"https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:38, n:"Хванч",                  cat:"Ресторан", ic:"🍷", bg:"linear-gradient(145deg,#0a0005,#1e000f,#2d0018)", ac:"#fb7185", p:"₽₽",  r:4.3, addr:"ул. Маршала Ерёменко, 3Г",    dist:"Краснооктябрьский",ph:"+7 8442 55-20-20",  h:"12:00–00:00", ig:"hvanch_vlg",       tags:["Грузинская","Вино","Хачапури","Банкеты"],         desc:"Грузинский ресторан с акцентом на вино. Хачапури и большой выбор грузинских вин.", photo:"https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:39, n:"Апельсин",               cat:"Кафе",     ic:"🍊", bg:"linear-gradient(145deg,#0a0500,#1e1000,#301800)", ac:"#fb923c", p:"₽₽",  r:4.2, addr:"ул. Чистоозёрная, 2",           dist:"Краснооктябрьский",ph:"+7 8442 55-30-30",  h:"10:00–22:00", ig:"apelsin_vlg",      tags:["Европейская","Бизнес-ланч","Семейное","Wi-Fi"],   desc:"Светлое кафе с европейской кухней. Вкусный бизнес-ланч и уютная семейная атмосфера.", photo:"https://images.unsplash.com/photo-1481349518771-20055b2a7b24?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:40, n:"ХЛЕБ",                   cat:"Кофейня",  ic:"🥖", bg:"linear-gradient(145deg,#0a0500,#201500,#302000)", ac:"#fbbf24", p:"₽",   r:4.2, addr:"пр. им. Ленина, 97",            dist:"Краснооктябрьский",ph:"+7 8442 55-40-40",  h:"08:00–21:00", ig:"hleb_cafe_vlg",    tags:["Выпечка","Кофе","Завтраки","Домашняя"],           desc:"Кофейня с ароматной выпечкой. Свои рецепты хлеба, кофе навынос и завтраки.", photo:"https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:41, n:"Нефертити",              cat:"Кафе",     ic:"🏺", bg:"linear-gradient(145deg,#050800,#0f1a00,#182500)", ac:"#a3e635", p:"₽₽",  r:4.1, addr:"ул. Маршала Ерёменко, 9А",     dist:"Краснооктябрьский",ph:"+7 8442 55-50-50",  h:"10:00–22:00", ig:"nefertiti_vlg",    tags:["Восточная","Банкеты","Кальян","Семейное"],         desc:"Кафе с восточной кухней и экзотическим интерьером. Кальян и восточные сладости.", photo:"https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1484980972926-edee96e0960d?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:42, n:"Чиполлино",              cat:"Кафе",     ic:"🧅", bg:"linear-gradient(145deg,#020a00,#081800,#0f2500)", ac:"#86efac", p:"₽",   r:4.1, addr:"ул. Маршала Ерёменко, 42",      dist:"Краснооктябрьский",ph:"+7 8442 55-60-60",  h:"09:00–21:00", ig:"chipollino_vlg",   tags:["Европейская","Семейное","Недорого","Детям"],      desc:"Уютное семейное кафе с простой вкусной едой. Любимое место жителей района.", photo:"https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:43, n:"Шинок",                  cat:"Бар",      ic:"🪗", bg:"linear-gradient(145deg,#0a0800,#1a1500,#2a2000)", ac:"#fde68a", p:"₽₽",  r:4.0, addr:"ул. Ерёменко, 68",              dist:"Краснооктябрьский",ph:"+7 8442 55-70-70",  h:"14:00–02:00", ig:"shinok_vlg",       tags:["Украинская","Пиво","Живая музыка","Вечеринки"],   desc:"Бар с украинскими мотивами. Сало, вареники и живая народная музыка по выходным.", photo:"https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop&q=80&auto=format"]},
+
+// ═══ КРАСНОАРМЕЙСКИЙ РАЙОН (7) ═══
+  {id:44, n:"Брискетта",              cat:"Ресторан", ic:"🥩", bg:"linear-gradient(145deg,#0a0000,#200505,#2d0808)", ac:"#ef4444", p:"₽₽",  r:4.4, addr:"ул. 50 лет Октября, 20А",      dist:"Красноармейский",  ph:"+7 8442 45-10-10", h:"11:00–23:00", ig:"brisketta_vlg",    tags:["Стейки","Гриль","Европейская","Терраса"],         desc:"Ресторан с акцентом на мясные блюда. Стейки на гриле и большая терраса.", photo:"https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:45, n:"Облепиха",               cat:"Кафе",     ic:"🫐", bg:"linear-gradient(145deg,#050800,#0f1a00,#182500)", ac:"#fbbf24", p:"₽₽",  r:4.3, addr:"пр. Героев Сталинграда, 44А",  dist:"Красноармейский",  ph:"+7 8442 45-20-20", h:"09:00–22:00", ig:"oblepiha_vlg",     tags:["Русская","Десерты","Завтраки","Домашняя"],        desc:"Кафе с домашней кухней и авторскими десертами. Уютный интерьер и сезонное меню.", photo:"https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:46, n:"Прайд",                  cat:"Ресторан", ic:"🦁", bg:"linear-gradient(145deg,#0a0500,#1e1200,#2d1a00)", ac:"#f59e0b", p:"₽₽",  r:4.3, addr:"ул. Хабаровская, 10",           dist:"Красноармейский",  ph:"+7 8442 45-30-30", h:"12:00–00:00", ig:"prayd_vlg",        tags:["Европейская","Банкеты","Живая музыка","Бронь"],   desc:"Ресторан с богатым интерьером и живой музыкой. Отличное место для торжеств.", photo:"https://images.unsplash.com/photo-1600891964092-4316c288032e?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:47, n:"Мимино",                 cat:"Ресторан", ic:"🕊️", bg:"linear-gradient(145deg,#0a0005,#150010,#1e0020)", ac:"#c084fc", p:"₽₽",  r:4.2, addr:"б-р Энгельса, 36Б",            dist:"Красноармейский",  ph:"+7 8442 45-40-40", h:"11:00–23:00", ig:"mimino_vlg",       tags:["Грузинская","Хачапури","Хинкали","Семейное"],     desc:"Грузинский ресторан. Хачапури, хинкали и блюда горной кухни в уютной обстановке.", photo:"https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1484980972926-edee96e0960d?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:48, n:"Верфь",                  cat:"Ресторан", ic:"⛵", bg:"linear-gradient(145deg,#001520,#002d42,#003d5a)", ac:"#38bdf8", p:"₽₽",  r:4.2, addr:"б-р Энгельса, 28Б",            dist:"Красноармейский",  ph:"+7 8442 45-50-50", h:"12:00–00:00", ig:"verf_vlg",         tags:["Морская","Рыба","Европейская","Терраса"],         desc:"Ресторан в морской тематике. Рыбные блюда, морепродукты и вид на заволжские дали.", photo:"https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:49, n:"Усадьба",                cat:"Кафе",     ic:"🏡", bg:"linear-gradient(145deg,#050800,#0f1800,#182500)", ac:"#86efac", p:"₽₽",  r:4.1, addr:"пр. Столетова, 4А",             dist:"Красноармейский",  ph:"+7 8442 45-60-60", h:"10:00–22:00", ig:"usadba_vlg",       tags:["Домашняя","Банкеты","Семейное","Недорого"],       desc:"Кафе в стиле загородной усадьбы. Домашняя кухня, большие залы и уютный дворик.", photo:"https://images.unsplash.com/photo-1481349518771-20055b2a7b24?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:50, n:"Мельница",               cat:"Кафе",     ic:"⚙️", bg:"linear-gradient(145deg,#080500,#181000,#281800)", ac:"#d97706", p:"₽",   r:4.0, addr:"ул. Изобильная, 3",             dist:"Красноармейский",  ph:"+7 8442 45-70-70", h:"09:00–21:00", ig:"melnitsa_vlg",     tags:["Домашняя","Недорого","Завтраки","Обеды"],         desc:"Домашнее кафе с простой и вкусной едой. Завтраки, обеды и пироги по доступным ценам.", photo:"https://images.unsplash.com/photo-1484980972926-edee96e0960d?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop&q=80&auto=format"]},
+
+// ═══ СОВЕТСКИЙ РАЙОН (4) ═══
+  {id:51, n:"Альтернатива",           cat:"Ресторан", ic:"🔥", bg:"linear-gradient(145deg,#100000,#250500,#350800)", ac:"#f97316", p:"₽₽",  r:4.4, addr:"ул. 8-й Воздушной Армии, 14",  dist:"Советский",        ph:"+7 8442 35-10-10", h:"12:00–00:00", ig:"alternativa_vlg",  tags:["Авторская","Гриль","Бар","Живая музыка"],         desc:"Ресторан-бар с авторской кухней. Мясо на гриле, большой выбор напитков и живая музыка.", photo:"https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:52, n:"Пивная №1",              cat:"Бар",      ic:"🍻", bg:"linear-gradient(145deg,#080500,#1a1000,#261800)", ac:"#fbbf24", p:"₽",   r:4.1, addr:"ул. Козловская, 22",            dist:"Советский",        ph:"+7 8442 35-20-20", h:"12:00–02:00", ig:"pivnaya_1_vlg",    tags:["Пиво","Закуски","Спорт","Недорого"],              desc:"Демократичный пивной бар с большим выбором пива. Трансляции спортивных событий.", photo:"https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:53, n:"Берлога",                cat:"Бар",      ic:"🐻", bg:"linear-gradient(145deg,#030a00,#081500,#0d2000)", ac:"#4ade80", p:"₽₽",  r:4.2, addr:"ул. Архитекторская, 12",        dist:"Советский",        ph:"+7 8442 35-40-40", h:"15:00–03:00", ig:"berloga_bar_vlg",  tags:["Крафт","Бургеры","Спорт","Вечеринки"],            desc:"Крафтовый бар с авторскими бургерами. Большой выбор крафтового пива и живая атмосфера.", photo:"https://images.unsplash.com/photo-1514190051997-0f6f39ca5cde?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1484980972926-edee96e0960d?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:54, n:"Кафе Уют",               cat:"Кафе",     ic:"🛋️", bg:"linear-gradient(145deg,#0a0800,#1a1400,#282000)", ac:"#d97706", p:"₽",   r:4.0, addr:"пр. им. Ленина, 162",           dist:"Советский",        ph:"+7 8442 35-30-30", h:"09:00–21:00", ig:"uyut_cafe_vlg",    tags:["Домашняя","Недорого","Завтраки","Обеды"],         desc:"Простое и доброе кафе с домашней едой. Горячие обеды и свежая выпечка.", photo:"https://images.unsplash.com/photo-1508424757105-b6d5ad9329d0?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop&q=80&auto=format"]},
+
+// ═══ ТРАКТОРОЗАВОДСКИЙ РАЙОН (4) ═══
+  {id:55, n:"Тракторный",             cat:"Ресторан", ic:"🚜", bg:"linear-gradient(145deg,#0a0500,#1e1200,#2d1a00)", ac:"#f59e0b", p:"₽₽",  r:4.3, addr:"пр. им. Ленина, 115",           dist:"Тракторозаводский",ph:"+7 8442 75-10-10", h:"12:00–00:00", ig:"traktorny_vlg",    tags:["Русская","Банкеты","Живая музыка","Бронь"],       desc:"Ресторан с характером. Русская кухня, живая музыка и залы для банкетов.", photo:"https://images.unsplash.com/photo-1485963631004-f2f00b1d6606?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:56, n:"Пиратская Пристань",     cat:"Ресторан", ic:"🚢",bg:"linear-gradient(145deg,#020c1a,#051e38,#082d50)", ac:"#38bdf8", p:"₽₽",  r:4.3, addr:"бул. 30-летия Победы, 12",     dist:"Тракторозаводский",ph:"+7 8442 75-20-20", h:"12:00–00:00", ig:"pirate_vlg",       tags:["Морская","Рыба","Детям","Шоу"],                   desc:"Ресторан в пиратской тематике. Детские шоу, морская кухня и незабываемая атмосфера.", photo:"https://images.unsplash.com/photo-1592861956120-e524fc739696?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:57, n:"Корчма",                 cat:"Кафе",     ic:"🪵", bg:"linear-gradient(145deg,#080400,#180e00,#281600)", ac:"#d97706", p:"₽",   r:4.0, addr:"ул. Дзержинского, 24",          dist:"Тракторозаводский",ph:"+7 8442 75-30-30", h:"10:00–22:00", ig:"korchma_vlg",      tags:["Украинская","Недорого","Домашняя","Банкеты"],     desc:"Уютная корчма с украинской кухней. Вареники, борщ и горилка в народном интерьере.", photo:"https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:58, n:"Восток",                 cat:"Кафе",     ic:"🌙", bg:"linear-gradient(145deg,#050010,#0f0028,#160038)", ac:"#a78bfa", p:"₽",   r:4.0, addr:"ул. Кирова, 121А",              dist:"Тракторозаводский",ph:"+7 8442 75-40-40", h:"10:00–22:00", ig:"vostok_cafe_vlg",  tags:["Узбекская","Плов","Шашлык","Недорого"],           desc:"Кафе узбекской кухни. Настоящий плов, лагман, самса и шашлык из тандыра.", photo:"https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop&q=80&auto=format"]},
+
+// ═══ КИРОВСКИЙ РАЙОН (3) ═══
+  {id:59, n:"Причал",                 cat:"Ресторан", ic:"⚓", bg:"linear-gradient(145deg,#001520,#002d42,#004060)", ac:"#38bdf8", p:"₽₽",  r:4.3, addr:"ул. им. Маршала Ерёменко, 7",   dist:"Кировский",        ph:"+7 8442 25-10-10", h:"12:00–00:00", ig:"prichal_vlg",      tags:["Морская","Рыба","Терраса","Вид на Волгу"],        desc:"Ресторан у воды с видом на Волгу. Рыбные блюда, морепродукты и летняя терраса.", photo:"https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1484980972926-edee96e0960d?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:60, n:"Арго",                   cat:"Ресторан", ic:"🚢", bg:"linear-gradient(145deg,#020c1a,#061e38,#0a2d50)", ac:"#4fc3f7", p:"₽₽",  r:4.2, addr:"Волжская набережная, 10",        dist:"Кировский",        ph:"+7 8442 25-20-20", h:"12:00–23:00", ig:"argo_vlg",         tags:["Европейская","Набережная","Банкеты","Романтика"],  desc:"Ресторан на набережной Волги. Европейская кухня и романтичный вид на реку.", photo:"https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop&q=80&auto=format"]},
+  {id:61, n:"Жигули",                 cat:"Бар",      ic:"🍺", bg:"linear-gradient(145deg,#0a0800,#1e1500,#2d2000)", ac:"#fbbf24", p:"₽",   r:4.0, addr:"ул. Землячки, 48",              dist:"Кировский",        ph:"+7 8442 25-30-30", h:"14:00–02:00", ig:"zhiguli_bar_vlg",  tags:["Пиво","Спорт","Недорого","Закуски"],              desc:"Народный пивной бар. Дешёвое разливное пиво, трансляции матчей и дружеская обстановка.", photo:"https://images.unsplash.com/photo-1514190051997-0f6f39ca5cde?w=800&h=500&fit=crop&q=80&auto=format", gallery:["https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80&auto=format","https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop&q=80&auto=format"]},
+  // ─── НОВЫЕ ЗАВЕДЕНИЯ ЦЕНТРАЛЬНОГО РАЙОНА ───
+  {id:62, n:"Jetlag",              cat:"Кофейня", ic:"✈️", bg:"linear-gradient(145deg,#080500,#181000,#252000)", ac:"#fbbf24", p:"₽₽",  r:4.7, addr:"ул. Маршала Чуйкова, 9",      dist:"Центральный", ph:"+7 9000 00-00-00", h:"07:00–23:00", ig:"jetlag_vlg",      tags:["Specialty","Завтраки","Терраса","Пончики"],   desc:"Культовая кофейня центра. Specialty-кофе, авторские пончики и сэндвичи. Летняя терраса и атмосфера для работы с ноутбуком.", photo:"https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&h=500&fit=crop&q=80", gallery:["https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&h=400&fit=crop&q=80","https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&h=400&fit=crop&q=80"]},
+  {id:63, n:"Just Coffee",         cat:"Кофейня", ic:"☕", bg:"linear-gradient(145deg,#0a0600,#1e1200,#2d1c00)", ac:"#d4a862", p:"₽",   r:4.5, addr:"ул. Маршала Чуйкова, 9",      dist:"Центральный", ph:"+7 9000 00-00-01", h:"07:00–00:00", ig:"justcoffee_vlg",   tags:["Кофе","Десерты","Wi-Fi","Навынос"],           desc:"Уютная кофейня с десертами со всего мира. Вкусный кофе, каждый 6-й бесплатно. Работают до полуночи по пятницам.", photo:"https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=800&h=500&fit=crop&q=80", gallery:["https://images.unsplash.com/photo-1511920170033-f8396924c348?w=600&h=400&fit=crop&q=80","https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop&q=80"]},
+  {id:64, n:"ZiRA Garden",         cat:"Ресторан", ic:"🌿", bg:"linear-gradient(145deg,#030d00,#081e00,#0d2d00)", ac:"#86efac", p:"₽₽₽", r:4.8, addr:"Аллея Героев, 2",              dist:"Центральный", ph:"+7 8442 00-00-02", h:"07:30–00:00", ig:"ziragarden_vlg",   tags:["Восточная","Панорама","Завтраки","Терраса"], desc:"Ресторан восточной кухни с панорамным видом. Тажины, хумус, люля-кебаб и авторские десерты. Лучшие завтраки на Аллее Героев.", photo:"https://images.unsplash.com/photo-1544148103-0773bf10d330?w=800&h=500&fit=crop&q=80", gallery:["https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop&q=80","https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80"]},
+  {id:65, n:"Soucou Coffee",        cat:"Кофейня", ic:"🫶", bg:"linear-gradient(145deg,#050a05,#0d1a0d,#152515)", ac:"#a3e635", p:"₽₽",  r:4.6, addr:"ул. Советская, 14",            dist:"Центральный", ph:"+7 9000 00-00-03", h:"08:00–22:00", ig:"soucou_coffee",    tags:["Specialty","Уютно","Wi-Fi","Работа"],         desc:"Камерная specialty-кофейня с авторскими напитками. Идеальное место для работы — быстрый интернет, тихая музыка и отличный кофе.", photo:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&h=500&fit=crop&q=80", gallery:["https://images.unsplash.com/photo-1453614512568-c4024d13c247?w=600&h=400&fit=crop&q=80","https://images.unsplash.com/photo-1512568400610-62da28bc8a13?w=600&h=400&fit=crop&q=80"]},
+  {id:66, n:"Жигули Рестобар",      cat:"Ресторан", ic:"🍺", bg:"linear-gradient(145deg,#080300,#180800,#281200)", ac:"#f59e0b", p:"₽₽",  r:4.6, addr:"ул. Мира, 12",                 dist:"Центральный", ph:"+7 8442 00-00-04", h:"12:00–00:00", ig:"zhiguli_restobar", tags:["Русская","Локальные продукты","Терраса","Бар"], desc:"Рестобар с блюдами из локальных продуктов. Новая русская кухня, авторские коктейли и большая летняя терраса. Один из самых популярных в центре.", photo:"https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=500&fit=crop&q=80", gallery:["https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&h=400&fit=crop&q=80","https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&h=400&fit=crop&q=80"]},
+  {id:67, n:"Хачапури Марико",      cat:"Ресторан", ic:"🧆", bg:"linear-gradient(145deg,#0a0005,#180010,#25001a)", ac:"#f472b6", p:"₽₽",  r:4.8, addr:"пр. им. Ленина, 54Б", dist:"Центральный", ph:"+7 8442 00-00-05", h:"10:00–23:00", ig:"mariko_vlg",       tags:["Грузинская","Хачапури","Банкеты","Скидки"],   desc:"Уголок настоящей Грузии в Волгограде. Хачапури, хинкали и блюда Кавказа от шеф-повара. Скидка именинникам 25%.", photo:"https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=500&fit=crop&q=80", gallery:["https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=600&h=400&fit=crop&q=80","https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?w=600&h=400&fit=crop&q=80"]},
+  {id:68, n:"Ведров-бар",           cat:"Бар",      ic:"🪣", bg:"linear-gradient(145deg,#030010,#08001e,#0d0030)", ac:"#818cf8", p:"₽₽",  r:4.5, addr:"Набережная 62-й Армии, 6",    dist:"Центральный", ph:"+7 9000 00-00-06", h:"16:00–04:00", ig:"vedrov_bar",       tags:["Коктейли","DJ","Вечеринки","Набережная"],     desc:"Модный бар на набережной. Авторские коктейли, регулярные DJ-вечеринки и лучший вид на вечернюю Волгу.", photo:"https://images.unsplash.com/photo-1566417713940-fe7c737a9ef2?w=800&h=500&fit=crop&q=80", gallery:["https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&h=400&fit=crop&q=80","https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=600&h=400&fit=crop&q=80"]},
+  {id:69, n:"Frant",                cat:"Ресторан", ic:"🎸", bg:"linear-gradient(145deg,#0a0000,#200000,#300000)", ac:"#ef4444", p:"₽₽",  r:4.4, addr:"ул. Советская, 36",            dist:"Центральный", ph:"+7 9000 00-00-07", h:"12:00–02:00", ig:"frant_vlg",        tags:["Европейская","Рок","DJ","Живая музыка"],       desc:"Ресторан-бар с рок-атмосферой. Европейская кухня, живая музыка и DJ-сеты. Культовое место центра для любителей громкой музыки.", photo:"https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=800&h=500&fit=crop&q=80", gallery:["https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=600&h=400&fit=crop&q=80","https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop&q=80"]},
+  {id:70, n:"Якудза",               cat:"Кафе",     ic:"🍣", bg:"linear-gradient(145deg,#05001a,#0f0035,#180050)", ac:"#a855f7", p:"₽₽",  r:4.4, addr:"ул. Мира, 9",                  dist:"Центральный", ph:"+7 9000 00-00-08", h:"11:00–23:00", ig:"yakuza_vlg",       tags:["Японская","Роллы","Суши","Бизнес-ланч"],      desc:"Лучший японский ресторан центра. Свежие роллы и суши, авторское меню от шеф-повара, быстрый бизнес-ланч.", photo:"https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&h=500&fit=crop&q=80", gallery:["https://images.unsplash.com/photo-1481349518771-20055b2a7b24?w=600&h=400&fit=crop&q=80","https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80"]},
+  {id:71, n:"Пинта",                cat:"Бар",      ic:"🍻", bg:"linear-gradient(145deg,#050300,#100800,#1a1000)", ac:"#d97706", p:"₽₽",  r:4.3, addr:"ул. Краснознаменская, 8",      dist:"Центральный", ph:"+7 9000 00-00-09", h:"14:00–03:00", ig:"pinta_vlg",        tags:["Крафт","Пиво","Спорт","Закуски"],             desc:"Крафтовый бар с 30+ сортами пива. Трансляции всех матчей, авторские закуски и дружелюбная атмосфера.", photo:"https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=800&h=500&fit=crop&q=80", gallery:["https://images.unsplash.com/photo-1514190051997-0f6f39ca5cde?w=600&h=400&fit=crop&q=80","https://images.unsplash.com/photo-1484980972926-edee96e0960d?w=600&h=400&fit=crop&q=80"]}
+];
+
+const CATS = ["Все","Ресторан","Кафе","Бар","Кофейня"];
+const DISTS = ["Все","Центральный","Ворошиловский","Дзержинский","Краснооктябрьский","Красноармейский","Советский","Тракторозаводский","Кировский"];
+const OB = [
+  {ic:"🃏",t:"Открывай новые места",d:"Листай карточки заведений как в Тиндере. Вправо — нравится, влево — не твоё."},
+  {ic:"❤️",t:"Сохраняй в избранное",d:"Добавляй понравившиеся кафе и рестораны в список «Хочу посетить»."},
+  {ic:"🏆",t:"Влияй на рейтинг",d:"Твои голоса формируют реальный лидерборд лучших заведений Волгограда."}
+];
+
+// ══════════════════════════════════════════════════════
+// TELEGRAM
+// ══════════════════════════════════════════════════════
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor?.('#06060e'); tg.setBackgroundColor?.('#06060e'); }
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let S = {
+  user: null, tab:'feed', cat:'Все', dist:'Все', search:'',
+  queue:[], skipped:[], favs:[], voted:{}, lbPeriod:2,
+  seed:null, fbScores:null
+};
+
+// ── STORAGE KEY — includes Telegram user ID if available for cross-device persistence ──
+function storageKey() {
+  const uid = tg?.initDataUnsafe?.user?.id;
+  return uid ? `sm_${uid}` : 'sm_guest';
+}
+
+function saveAll() {
+  try {
+    localStorage.setItem(storageKey(), JSON.stringify({
+      queue: S.queue, skipped: S.skipped,
+      favs: S.favs.map(v => v.id),
+      voted: S.voted, seed: S.seed,
+      savedAt: Date.now()
+    }));
+  } catch(e){}
+}
+
+function loadAll() {
+  try {
+    // Try user-specific key first, fallback to guest
+    const uid = tg?.initDataUnsafe?.user?.id;
+    let raw = localStorage.getItem(uid ? `sm_${uid}` : 'sm_guest');
+    // also try old key for backward compat
+    if (!raw) raw = localStorage.getItem('svoe_mesto_v2');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (d.queue)   S.queue   = d.queue;
+    if (d.skipped) S.skipped = d.skipped;
+    if (d.voted)   S.voted   = d.voted || {};
+    if (d.seed)    S.seed    = d.seed;
+    if (d.favs)    S.favs    = d.favs.map(id => VENUES.find(v=>v.id===id)).filter(Boolean);
+  } catch(e){}
+}
+
+// ── SEEDED SHUFFLE ──
+function seededRng(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5|0;
+    let t = Math.imul(seed ^ seed>>>15, 1|seed);
+    t = t + Math.imul(t ^ t>>>7, 61|t) ^ t;
+    return ((t ^ t>>>14)>>>0) / 4294967296;
+  };
+}
+function shuffle(arr, rng) {
+  const a = [...arr];
+  for (let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function initQueue() {
+  const all = VENUES.map(v=>v.id);
+  if (!S.queue || !S.queue.length) {
+    if (!S.seed) S.seed = Math.floor(Math.random()*2147483647)+1;
+    const rng = seededRng(S.seed);
+    S.queue = shuffle(all, rng).filter(id => !(S.skipped||[]).includes(id));
+  } else {
+    // Add new venues not yet seen
+    const seen = new Set([...S.queue,...(S.skipped||[])]);
+    const newIds = all.filter(id=>!seen.has(id));
+    if (newIds.length) {
+      const rng = seededRng((S.seed||1)+Date.now());
+      newIds.forEach(id=>{ const p=Math.floor(rng()*(S.queue.length+1)); S.queue.splice(p,0,id); });
+    }
+  }
+}
+
+// Load & init
+loadAll();
+initQueue();
+
+// ── TG USER ──
+(function setUser() {
+  const u = tg?.initDataUnsafe?.user;
+  if (u) S.user = u;
+})();
+
+// ══════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════
+let toastT;
+function toast(m) {
+  const el=document.getElementById('toast');
+  el.textContent=m; el.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),2200);
+  tg?.HapticFeedback?.notificationOccurred('success');
+}
+function oS(id){document.getElementById(id)?.classList.add('open');}
+function cS(id){document.getElementById(id)?.classList.remove('open');}
+document.querySelectorAll('.so').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+
+function venueScore(v) {
+  const sc = S.fbScores?.[v.id] || {likes:0,saves:0};
+  return (sc.likes||0) + (sc.saves||0)*2;
+}
+function updateFavBadge() {
+  const b=document.getElementById('fbdg');
+  if(S.favs.length){b.style.display='inline';b.textContent=S.favs.length;}
+  else b.style.display='none';
+}
+
+// ══════════════════════════════════════════════════════
+// ONBOARDING
+// ══════════════════════════════════════════════════════
+let obStep=0;
+function renderOb() {
+  const s=OB[obStep];
+  document.getElementById('obc').innerHTML=`<div style="text-align:center;animation:fadeUp .35s ease"><div class="obi">${s.ic}</div><div class="obt">${s.t}</div><div class="obd">${s.d}</div></div>`;
+  document.getElementById('obds').innerHTML=OB.map((_,i)=>`<div class="obdot ${i===obStep?'act':''}"></div>`).join('');
+  document.getElementById('obnx').textContent=obStep<OB.length-1?'Далее →':'Начать 🚀';
+}
+document.getElementById('obnx').onclick=()=>{ if(obStep<OB.length-1){obStep++;renderOb();}else startApp(); };
+document.getElementById('obsk').onclick=startApp;
+function startApp() {
+  document.getElementById('onboard').classList.remove('vis');
+  showApp();
+}
+function showApp() {
+  document.getElementById('hdr').style.display='flex';
+  document.getElementById('tabs').style.display='flex';
+  document.getElementById('dist-bar').style.display='flex';
+  document.getElementById('main').style.display='block';
+  renderFilters();
+  renderFeed();
+  updateFavBadge();
+  // Firebase inits via window.onload below
+}
+
+// Splash → onboard
+setTimeout(()=>{
+  document.getElementById('splash').classList.add('hide');
+  setTimeout(()=>{ document.getElementById('onboard').classList.add('vis'); renderOb(); }, 480);
+}, 2000);
+
+// ══════════════════════════════════════════════════════
+// HEADER SEARCH (unified)
+// ══════════════════════════════════════════════════════
+const hdrInput = document.getElementById('hdr-sinp');
+hdrInput.addEventListener('input', e => {
+  S.search = e.target.value.trim();
+  document.getElementById('hdr-clr').style.display = S.search ? 'block' : 'none';
+  // Always go to search panel when typing (show all if empty, filter if has query)
+  setTab('search', false);
+  renderGS();
+});
+function clearHdrSearch() {
+  hdrInput.value = ''; S.search = '';
+  document.getElementById('hdr-clr').style.display='none';
+  if (S.tab === 'search') {
+    renderGS(); // show all venues sorted by rating
+  } else {
+    setTab('feed', false);
+  }
+  hdrInput.focus();
+}
+
+// ══════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════
+function setTab(name, clearSearch=true) {
+  if (clearSearch && S.search) { hdrInput.value=''; S.search=''; document.getElementById('hdr-clr').style.display='none'; }
+  S.tab = name;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('act', b.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('act'));
+  document.getElementById('panel-'+name)?.classList.add('act');
+  document.getElementById('dist-bar').style.display = name==='feed'?'flex':'none';
+  if (name==='top') renderLB(S.fbScores);
+  if (name==='saved') renderFavs();
+  if (name==='profile') renderProfile();
+  if (name==='random') drawWheel();
+  if (name==='search') {
+    renderGS();
+    setTimeout(()=>{ document.getElementById('hdr-sinp')?.focus(); }, 200);
+  }
+}
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>setTab(btn.dataset.tab));
+});
+
+// ══════════════════════════════════════════════════════
+// FILTERS
+// ══════════════════════════════════════════════════════
+function renderFilters() {
+  document.getElementById('dist-bar').innerHTML=DISTS.map(d=>`<button class="dbtn ${d===S.dist?'act':''}" onclick="setDist('${d}')">${d}</button>`).join('');
+  document.getElementById('cat-row').innerHTML=CATS.map(c=>`<button class="cbtn ${c===S.cat?'act':''}" onclick="setCat('${c}')">${c}</button>`).join('');
+}
+function setDist(d){S.dist=d;renderFilters();renderFeed();}
+function setCat(c){S.cat=c;renderFilters();renderFeed();}
+
+// ══════════════════════════════════════════════════════
+// FEED
+// ══════════════════════════════════════════════════════
+function getFiltered() {
+  return S.queue.filter(id=>{
+    const v=VENUES.find(x=>x.id===id); if(!v)return false;
+    if(S.dist!=='Все'&&v.dist!==S.dist)return false;
+    if(S.cat!=='Все'&&v.cat!==S.cat)return false;
+    return true;
+  });
+}
+function renderFeed() {
+  const fl=getFiltered(), cur=VENUES.find(v=>v.id===fl[0]), nxt=VENUES.find(v=>v.id===fl[1]);
+  const el=document.getElementById('feed-content');
+  if (!cur) {
+    el.innerHTML=`<div class="done">
+      <div style="font-size:48px;margin-bottom:12px">🎉</div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;margin-bottom:6px">Всё просмотрено!</div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:20px">Ты оценил все заведения${S.cat!=='Все'?' в «'+S.cat+'»':''}${S.dist!=='Все'?' · '+S.dist:''}</div>
+      <button onclick="resetQ()" style="background:linear-gradient(135deg,var(--g),var(--g2));border:none;color:#000;font-weight:700;font-family:'DM Sans',sans-serif;font-size:13px;padding:12px 28px;border-radius:40px;cursor:pointer">Смотреть снова</button>
+    </div>`;
+    return;
+  }
+  el.innerHTML=`
+  <div id="card-area">
+    ${nxt?`<div class="card-behind" style="background:#111;opacity:.6"><div class="card-photo"></div></div>`:''}
+    <div class="card-front" id="cf">
+      <div class="sind like" id="il">ЛАЙК ❤️</div>
+      <div class="sind nope" id="in">МИМО 👎</div>
+      <div class="card-photo" style="background-image:url('${cur.photo}'),${cur.bg};background-color:#111"></div>
+      <div class="card-grad"></div>
+      <div class="card-cat">${cur.cat}</div>
+      <div class="card-dist">${cur.dist}</div>
+      <button class="card-ib" onclick="openDetail(${cur.id})">ℹ️</button>
+      <div class="card-content">
+        <div class="card-name">${cur.n}</div>
+        <div class="card-addr" style="color:${cur.ac}">${cur.p} · 📍 ${cur.addr}</div>
+        <div class="card-desc">${cur.desc}</div>
+        <div>${cur.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        <div class="card-meta"><span>👍 ${(S.fbScores?.[cur.id]?.likes||0)}</span><span>🔖 ${(S.fbScores?.[cur.id]?.saves||0)}</span><span>🕐 ${cur.h}</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="arow">
+    <button class="ab dl" onclick="doSwipe('left')">👎</button>
+    <button class="ab un" onclick="undoSwipe()">↩️</button>
+    <button class="ab fv" onclick="doSwipe('right',true)">❤️</button>
+    <button class="ab i2" onclick="openDetail(${cur.id})">ℹ️</button>
+    <button class="ab lk" onclick="doSwipe('right')">👍</button>
+  </div>
+  <div class="swipe-hint">← свайп или кнопки →</div>`;
+  bindDrag();
+}
+
+// ══════════════════════════════════════════════════════
+// DRAG
+// ══════════════════════════════════════════════════════
+let drag={on:false,x:0,y:0,sx:0,sy:0};
+function bindDrag() {
+  const c=document.getElementById('cf'); if(!c)return;
+  const s=(x,y)=>{drag={on:true,x:0,y:0,sx:x,sy:y};};
+  const m=(x,y)=>{
+    if(!drag.on)return;
+    drag.x=x-drag.sx; drag.y=y-drag.sy;
+    c.style.transform=`translateX(${drag.x}px) translateY(${drag.y*.15}px) rotate(${drag.x*.05}deg)`;
+    c.style.transition='none';
+    document.getElementById('il')?.classList.toggle('show',drag.x>55);
+    document.getElementById('in')?.classList.toggle('show',drag.x<-55);
+  };
+  const e=()=>{
+    if(!drag.on)return; drag.on=false;
+    if(drag.x>80)doSwipe('right');
+    else if(drag.x<-80)doSwipe('left');
+    else{c.style.transform='';c.style.transition='transform .3s ease';}
+  };
+  c.addEventListener('mousedown',ev=>s(ev.clientX,ev.clientY));
+  c.addEventListener('mousemove',ev=>m(ev.clientX,ev.clientY));
+  c.addEventListener('mouseup',e); c.addEventListener('mouseleave',e);
+  c.addEventListener('touchstart',ev=>{ev.preventDefault();s(ev.touches[0].clientX,ev.touches[0].clientY);},{passive:false});
+  c.addEventListener('touchmove',ev=>{ev.preventDefault();m(ev.touches[0].clientX,ev.touches[0].clientY);},{passive:false});
+  c.addEventListener('touchend',e);
+}
+
+// ══════════════════════════════════════════════════════
+// SWIPE
+// ══════════════════════════════════════════════════════
+function doSwipe(dir, addFav=false) {
+  const fl=getFiltered(), cur=VENUES.find(v=>v.id===fl[0]); if(!cur)return;
+  tg?.HapticFeedback?.impactOccurred(addFav?'medium':'light');
+  const c=document.getElementById('cf');
+  if(c){c.style.transition='all .28s cubic-bezier(.4,0,.2,1)';c.style.transform=dir==='right'?'translateX(130%) rotate(22deg)':'translateX(-130%) rotate(-22deg)';c.style.opacity='0';}
+  if(!S.voted[cur.id]){
+    if(dir==='right')fbVote(cur.id,true,false);
+    else fbVote(cur.id,false,false);
+    S.voted[cur.id]=dir==='right'?'like':'dislike';
+  } else { toast('Ты уже оценивал это место'); }
+  if(addFav){
+    if(!S.favs.find(f=>f.id===cur.id)){
+      S.favs.push(cur); updateFavBadge(); toast('❤️ Добавлено в избранное!');
+      fbVote(cur.id,true,true);
+    } else toast('Уже в избранном');
+  }
+  setTimeout(()=>{
+    S.skipped.push(cur.id); S.queue=S.queue.filter(id=>id!==cur.id);
+    saveAll(); renderFeed();
+  },260);
+}
+function undoSwipe() {
+  if(!S.skipped.length){toast('Нечего отменять');return;}
+  const last=S.skipped.pop(); S.queue.unshift(last);
+  saveAll(); renderFeed(); toast('↩️ Отменено');
+}
+function resetQ() {
+  S.queue=VENUES.map(v=>v.id); S.skipped=[];
+  saveAll(); renderFeed();
+}
+
+// ══════════════════════════════════════════════════════
+// DETAIL SHEET with photo gallery
+// ══════════════════════════════════════════════════════
+function openDetail(id) {
+  const v=VENUES.find(x=>x.id===id); if(!v)return;
+  const allPhotos=[v.photo,...(v.gallery||[])];
+  const ph=v.ph?.replace(/[^+\d]/g,'')||'';
+  const sc=S.fbScores?.[v.id]||{likes:0,saves:0};
+  document.getElementById('det-sh').innerHTML=`
+    <div class="det-gallery" style="position:relative">
+      <div id="det-main" class="det-main-photo" data-bg="${v.bg}" style="background:url('${allPhotos[0]}') center/cover,${v.bg}"></div>
+      <button class="sh-close" onclick="cS('det-ov')">✕</button>
+    </div>
+    ${allPhotos.length>1?`<div class="det-gallery-strip">${allPhotos.map((p,i)=>`<div class="${i===0?'gthumb active':'gthumb'}" style="background:url('${p}') center/cover,#111" onclick="setDetPhoto(this,'${p}')"></div>`).join('')}</div>`:''}
+    <div class="sbod">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+        <div style="flex:1;margin-right:8px">
+          <div class="sname">${v.n}</div>
+          <div style="font-size:11px;color:${v.ac};margin-top:3px">${v.p} · ${v.cat} · ${v.dist} р-н</div>
+        </div>
+        <div class="srat" style="background:${v.ac}">⭐ ${v.r}</div>
+      </div>
+      <div class="sdesc">${v.desc}</div>
+      <div style="margin-bottom:12px">${v.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      <div class="mr"><div class="mi">🕐</div><div class="ml">Часы</div><div class="mv">${v.h}</div></div>
+      <div class="mr"><div class="mi">📍</div><div class="ml">Адрес</div><div class="mv">${v.addr}</div></div>
+      <div class="mr"><div class="mi">📞</div><div class="ml">Телефон</div><div class="mv"><a href="tel:${ph}" class="mvl">${v.ph||'—'}</a></div></div>
+      <div class="mr"><div class="mi">📸</div><div class="ml">Instagram</div><div class="mv"><a href="https://instagram.com/${v.ig||''}" target="_blank" class="mvl">@${v.ig||'—'}</a></div></div>
+      <div class="sstats">
+        <div class="sst"><div class="ssti">👍</div><div class="sstv">${sc.likes||0}</div><div class="sstl">лайков</div></div>
+        <div class="sst"><div class="ssti">❤️</div><div class="sstv">${sc.saves||0}</div><div class="sstl">сохранений</div></div>
+        <div class="sst"><div class="ssti">⭐</div><div class="sstv">${v.r}</div><div class="sstl">рейтинг</div></div>
+      </div>
+      <div class="sctas">
+        <button class="cm2" onclick="addFavDet(${v.id})">❤️ В избранное</button>
+        <a class="ci" href="https://yandex.ru/maps/?text=${encodeURIComponent(v.n+' Волгоград '+v.addr)}" target="_blank">🗺️</a>
+        <a class="ci" href="tel:${ph}">📞</a>
+        <button class="ci" onclick="shareV(${v.id})">📤</button>
+      </div>
+    </div>`;
+  oS('det-ov');
+}
+function setDetPhoto(el, src) {
+  const det = document.getElementById('det-main');
+  if (det) det.style.background = `url('${src}') center/cover,` + (det.dataset.bg||'#111');
+  document.querySelectorAll('.gthumb').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+}
+function addFavDet(id) {
+  const v=VENUES.find(x=>x.id===id); if(!v)return;
+  if(!S.favs.find(f=>f.id===id)){
+    S.favs.push(v); updateFavBadge(); saveAll();
+    fbVote(id,true,true); toast('❤️ Добавлено в избранное!');
+  } else toast('Уже в избранном');
+  cS('det-ov');
+}
+function shareV(id) {
+  const v=VENUES.find(x=>x.id===id); if(!v)return;
+  const txt=`${v.n}\n📍 ${v.addr}, Волгоград\n⭐ ${v.r} · ${v.p}\nОткрой в Своё Место 🏛️`;
+  if(tg?.switchInlineQuery)tg.switchInlineQuery(txt);
+  else if(navigator.share)navigator.share({title:v.n,text:txt});
+  else{navigator.clipboard?.writeText(txt);toast('📤 Скопировано!');}
+}
+
+// ══════════════════════════════════════════════════════
+// LEADERBOARD (Firebase realtime)
+// ══════════════════════════════════════════════════════
+function renderLB(fbScores) {
+  document.getElementById('prow').innerHTML=['День','Неделя','Месяц'].map((p,i)=>`
+    <button class="pb ${i===S.lbPeriod?'act':''}" onclick="setLbP(${i})">${p}</button>`).join('');
+  const data=fbScores||{};
+  const scored=VENUES.map(v=>{
+    const sc=data[v.id]||{likes:0,saves:0};
+    return{...v,_sc:(sc.likes||0)+(sc.saves||0)*2,_l:sc.likes||0,_s:sc.saves||0};
+  }).filter(v=>v._sc>0).sort((a,b)=>b._sc-a._sc);
+  if(!scored.length){
+    document.getElementById('lbl').innerHTML=`<div style="text-align:center;padding:36px 0;color:var(--t3)">
+      <div style="font-size:28px;margin-bottom:10px">🏆</div>
+      <div style="font-family:'Playfair Display',serif;font-size:17px;margin-bottom:6px">Лидерборд пуст</div>
+      <div style="font-size:12px">Будь первым — свайпай заведения!</div>
+    </div>`;
+    return;
+  }
+  const md=['🥇','🥈','🥉'];
+  document.getElementById('lbl').innerHTML=scored.slice(0,10).map((v,i)=>`
+    <div class="lr" onclick="openDetail(${v.id})" style="animation:fadeUp ${.05+i*.03}s ease both">
+      ${i<3?`<div class="lrank">${md[i]}</div>`:`<div class="lnum">${i+1}</div>`}
+      <div class="lthumb" style="background:url('${v.photo}') center/cover,${v.bg}"></div>
+      <div class="li">
+        <div class="lname">${v.n}</div>
+        <div class="lmeta">${v.dist} · 👍${v._l} ❤️${v._s}</div>
+      </div>
+      <div><div class="lsv">${v._sc}</div><div class="lsl">очков</div></div>
+    </div>`).join('');
+}
+function setLbP(i){S.lbPeriod=i;renderLB(S.fbScores);}
+
+// ══════════════════════════════════════════════════════
+// FAVORITES
+// ══════════════════════════════════════════════════════
+function renderFavs() {
+  const el=document.getElementById('favl');
+  if(!S.favs.length){
+    el.innerHTML=`<div class="es"><div style="font-size:40px;margin-bottom:12px">❤️</div><div style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:6px">Пока пусто</div><div style="font-size:12px;color:#444">Нажми ❤️ в ленте чтобы сохранить место</div></div>`;
+    return;
+  }
+  el.innerHTML=S.favs.map(v=>`
+    <div class="fc" onclick="openDetail(${v.id})">
+      <div class="ft" style="background:url('${v.photo}') center/cover,${v.bg}"></div>
+      <div class="fi">
+        <div class="fn">${v.n}</div>
+        <div class="fa">${v.cat} · ${v.dist} · ${v.addr}</div>
+        <div>${v.tags.slice(0,3).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      </div>
+      <button class="fdel" onclick="event.stopPropagation();rmFav(${v.id})">✕</button>
+    </div>`).join('');
+}
+function rmFav(id){S.favs=S.favs.filter(f=>f.id!==id);updateFavBadge();saveAll();renderFavs();toast('Удалено из избранного');}
+
+// ══════════════════════════════════════════════════════
+// PROFILE
+// ══════════════════════════════════════════════════════
+function renderProfile() {
+  const u=S.user;
+  const nm=u?`${u.first_name||''}${u.last_name?' '+u.last_name:''}`.trim():'Гость';
+  const un=u?.username?`@${u.username}`:'Войди через Telegram';
+  const avH=u?.photo_url?`<img src="${u.photo_url}" alt="avatar">`:u?.first_name?.[0]||'👤';
+  document.getElementById('profile-content').innerHTML=`
+    <div class="ph">
+      <div class="pav">${typeof avH==='string'&&avH.startsWith('<img')?avH:`<span style="font-size:26px">${avH}</span>`}</div>
+      <div class="pname">${nm}</div>
+      <div class="pusr">${un}</div>
+    </div>
+    <div class="psg">
+      <div class="psc"><div class="psv">${S.skipped.length}</div><div class="psl">Оценено</div></div>
+      <div class="psc"><div class="psv">${S.favs.length}</div><div class="psl">Избранное</div></div>
+      <div class="psc"><div class="psv">${Object.keys(S.voted).length}</div><div class="psl">Голосов</div></div>
+    </div>
+    <div class="psec">
+      <div class="psec-title">МОИ ЛЮБИМЫЕ МЕСТА</div>
+      ${S.favs.length?S.favs.slice(0,3).map(v=>`
+        <div style="display:flex;gap:9px;align-items:center;padding:7px 0;border-bottom:1px solid #0d0d0d;cursor:pointer" onclick="openDetail(${v.id})">
+          <div style="width:34px;height:34px;border-radius:9px;overflow:hidden;flex-shrink:0"></div>
+          <div style="flex:1;min-width:0"><div style="font-size:13px;font-family:'Playfair Display',serif;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.n}</div>
+          <div style="font-size:10px;color:#444">${v.dist} · ${v.addr}</div></div>
+        </div>`).join('')
+        :'<div style="font-size:12px;color:#444;padding:6px 0">Сохрани первое место через ❤️</div>'}
+    </div>
+    <div class="psec">
+      <div class="psec-title">О ПРИЛОЖЕНИИ</div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.8">
+        🏛️ <b style="color:var(--tx)">Своё Место</b> — тиндер для заведений<br>
+        📍 8 районов Волгограда · ${VENUES.length} заведений<br>
+        🧪 Версия 2.0
+      </div>
+    </div>
+    <div class="wip">
+      <div style="font-size:20px;margin-bottom:6px">🏪</div>
+      <div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;margin-bottom:4px">Кабинет владельца</div>
+      <div style="font-size:10px;color:var(--g);letter-spacing:1px;margin-bottom:6px">🚧 COMING SOON</div>
+      <div style="font-size:11px;color:#555;line-height:1.6">Скоро владельцы смогут управлять профилем и видеть статистику</div>
+    </div>
+    <button class="fbbtn" onclick="oS('fb-ov')">💬 Оставить отзыв</button>
+    <div style="height:16px"></div>`;
+}
+
+// ══════════════════════════════════════════════════════
+// SEARCH (unified — results show below header)
+// ══════════════════════════════════════════════════════
+function renderGS() {
+  const q=S.search.toLowerCase();
+  let list=[...VENUES];
+  if(q){
+    list=list.filter(v=>
+      v.n.toLowerCase().includes(q)||
+      v.addr.toLowerCase().includes(q)||
+      v.dist.toLowerCase().includes(q)||
+      v.cat.toLowerCase().includes(q)||
+      v.tags.some(t=>t.toLowerCase().includes(q))
+    );
+    document.getElementById('gs-info').textContent=list.length?`НАЙДЕНО: ${list.length}`:'НИЧЕГО НЕ НАЙДЕНО';
+  } else {
+    document.getElementById('gs-info').textContent=`ВСЕ ЗАВЕДЕНИЯ (${list.length}) · ПО РЕЙТИНГУ`;
+  }
+  list.sort((a,b)=>{
+    const sa=(S.fbScores?.[a.id]?.likes||0)+(S.fbScores?.[a.id]?.saves||0)*2;
+    const sb=(S.fbScores?.[b.id]?.likes||0)+(S.fbScores?.[b.id]?.saves||0)*2;
+    return sb-sa||b.r-a.r;
+  });
+  function hl(t){
+    if(!q||!t)return t;
+    try{return String(t).replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark class="hl">$1</mark>');}
+    catch{return t;}
+  }
+  const mv=S.voted;
+  document.getElementById('gs-list').innerHTML=list.map((v,i)=>{
+    const vb=mv[v.id]?`<span style="font-size:9px;padding:1px 5px;border-radius:8px;margin-left:5px;background:${mv[v.id]==='like'?'rgba(34,197,94,.15)':'rgba(239,68,68,.15)'};color:${mv[v.id]==='like'?'#22c55e':'#ef4444'}">${mv[v.id]==='like'?'👍':'👎'}</span>`:'';
+    return `<div class="gs-item" onclick="openDetail(${v.id})" style="animation:fadeUp ${.05+i*.02}s ease both">
+      <div class="gs-thumb" style="background:url('${v.photo}') center/cover,${v.bg}"></div>
+      <div class="gs-info">
+        <div class="gs-name">${hl(v.n)}${vb}</div>
+        <div class="gs-sub">${hl(v.cat)} · ${hl(v.dist)} · ${hl(v.addr)}</div>
+        <div style="margin-top:3px">${v.tags.slice(0,3).map(t=>`<span class="tag" style="font-size:8px;padding:1px 6px">${t}</span>`).join('')}</div>
+      </div>
+      <div class="gs-right"><div class="gs-r">⭐ ${v.r}</div><div class="gs-c">${v.p}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// SPIN WHEEL
+// ══════════════════════════════════════════════════════
+let spinResult=null, isSpinning=false, spinAngle=0;
+function drawWheel() {
+  const c=document.getElementById('spin-canvas'); if(!c)return;
+  const ctx=c.getContext('2d'), cx=120,cy=120,r=116, items=VENUES.slice(0,12), arc=(Math.PI*2)/items.length;
+  const bgs=['#1a0e00','#0a1628','#0d0500','#050010','#021000','#060300','#080514','#0a0a00','#150800','#001520','#0a0500','#120000'];
+  ctx.clearRect(0,0,240,240);
+  items.forEach((v,i)=>{
+    const st=arc*i-Math.PI/2+spinAngle*(Math.PI/180), en=st+arc;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,st,en);ctx.closePath();
+    ctx.fillStyle=bgs[i%bgs.length];ctx.fill();
+    ctx.strokeStyle='rgba(212,168,98,.3)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(st+arc/2);
+    ctx.font='18px serif';ctx.textAlign='center';ctx.fillText(v.ic,r*.65,6);ctx.restore();
+  });
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='#d4a862';ctx.lineWidth=2.5;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,22,0,Math.PI*2);ctx.fillStyle='#06060e';ctx.fill();ctx.strokeStyle='#d4a862';ctx.lineWidth=2.5;ctx.stroke();
+}
+function doSpin() {
+  if(isSpinning)return; isSpinning=true;
+  const btn=document.getElementById('spin-btn'); if(btn){btn.disabled=true;btn.textContent='⏳ Крутится...';}
+  document.getElementById('spin-result').style.display='none';
+  tg?.HapticFeedback?.impactOccurred('medium');
+  const chosen=VENUES[Math.floor(Math.random()*VENUES.length)]; spinResult=chosen;
+  const total=(5+Math.floor(Math.random()*3))*360+Math.random()*360;
+  const start=spinAngle, end=start+total, dur=3500, t0=performance.now(); let lastSeg=-1;
+  function easeOut(t){return 1-Math.pow(1-t,3);}
+  function frame(now){
+    const t=Math.min((now-t0)/dur,1); spinAngle=start+(end-start)*easeOut(t);
+    const seg=Math.floor((spinAngle%360)/(360/12));
+    if(seg!==lastSeg){tg?.HapticFeedback?.selectionChanged?.();lastSeg=seg;}
+    drawWheel();
+    if(t<1)requestAnimationFrame(frame);
+    else{
+      spinAngle=end%360; isSpinning=false;
+      tg?.HapticFeedback?.notificationOccurred('success');
+      if(btn){btn.disabled=false;btn.textContent='🎰 Крутить!';}
+      showSpinResult(chosen);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+function showSpinResult(v) {
+  document.getElementById('spin-card').innerHTML=`
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+      <div style="width:50px;height:50px;border-radius:12px;flex-shrink:0;background:url('${v.photo}') center/cover,${v.bg}"></div>
+      <div style="flex:1"><div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900">${v.n}</div>
+      <div style="font-size:11px;color:${v.ac};margin-top:2px">${v.cat} · ${v.p}</div></div>
+      <div style="background:${v.ac};color:#000;font-weight:700;font-size:12px;padding:3px 8px;border-radius:14px;flex-shrink:0">⭐ ${v.r}</div>
+    </div>
+    <div style="font-size:11px;color:var(--t2);line-height:1.55;margin-bottom:8px">${v.desc}</div>
+    <div>${v.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+    <div style="font-size:10px;color:#444;margin-top:8px">📍 ${v.addr} · 🕐 ${v.h}</div>
+    <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--g)">Нажми для подробностей →</div>`;
+  document.getElementById('spin-result').style.display='block';
+}
+function openDetailFromSpin(){if(spinResult)openDetail(spinResult.id);}
+setTimeout(drawWheel,300);
+
+// ══════════════════════════════════════════════════════
+// FEEDBACK
+// ══════════════════════════════════════════════════════
+function sendFB() {
+  const txt=document.getElementById('fbt').value.trim(); if(!txt){toast('Напиши что-нибудь 😊');return;}
+  const u=S.user, from=u?`@${u.username||u.first_name||'аноним'}`:'аноним';
+  if(tg?.sendData)tg.sendData(JSON.stringify({type:'feedback',from,text:txt,ts:Date.now()}));
+  else{navigator.clipboard?.writeText(`[Отзыв от ${from}]: ${txt}`);}
+  toast('📨 Отправлено! Спасибо'); cS('fb-ov'); document.getElementById('fbt').value='';
+}
+
+// ── Firebase init after all scripts loaded ──
+window.addEventListener('load', function() {
+  try { initFB(); } catch(e) { console.warn('FB init:', e.message); }
+});
+</script>
+</body>
+</html>
