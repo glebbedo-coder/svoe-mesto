@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Своё Место — Волгоград</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & ROOT ── */
+:root{--g:#d4a862;--g2:#8b6914;--bg:#06060e;--b2:#0d0d1a;--b3:#13132a;--bd:#1a1a2e;--tx:#fff;--t2:rgba(255,255,255,.65);--t3:#555}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{height:100%;overflow:hidden}
+body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;max-width:480px;margin:0 auto}
+
+/* ── SPLASH ── */
+#splash{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s,transform .5s}
+#splash.hide{opacity:0;transform:scale(1.04);pointer-events:none}
+.si{font-size:64px;margin-bottom:16px;animation:popIn .7s cubic-bezier(.2,1.4,.4,1);filter:drop-shadow(0 0 28px rgba(212,168,98,.5))}
+.st{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;letter-spacing:-1px}
+.st span{color:var(--g)}
+.ss{font-size:10px;color:var(--t3);letter-spacing:3px;margin-top:6px}
+.sd{display:flex;gap:6px;margin-top:40px}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--g)}
+.sdot:nth-child(1){animation:dp 1s 0s infinite}.sdot:nth-child(2){animation:dp 1s .2s infinite}.sdot:nth-child(3){animation:dp 1s .4s infinite}
+
+/* ── ONBOARDING ── */
+#onboard{position:fixed;inset:0;background:var(--bg);z-index:190;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px}
+#onboard.vis{display:flex}
+.obi{font-size:72px;margin-bottom:24px}
+.obt{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;margin-bottom:12px;line-height:1.2;text-align:center}
+.obd{font-size:14px;color:var(--t3);line-height:1.65;max-width:280px;text-align:center}
+.obds{display:flex;gap:7px;margin:32px 0 28px}
+.obdot{width:7px;height:7px;border-radius:4px;background:#222;transition:all .3s}
+.obdot.act{width:22px;background:var(--g)}
+.obbtn{width:100%;max-width:300px;padding:15px;border-radius:50px;background:linear-gradient(135deg,var(--g),var(--g2));border:none;color:#000;font-family:'DM Sans',sans-serif;font-weight:700;font-size:15px;cursor:pointer}
+.obsk{background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer;margin-top:12px;font-family:'DM Sans',sans-serif}
+
+/* ── HEADER ── */
+#hdr{padding:10px 14px 6px;display:flex;align-items:center;gap:8px;background:rgba(6,6,14,.97);backdrop-filter:blur(12px);border-bottom:1px solid #0d0d1a;flex-shrink:0;z-index:30}
+.logo{flex-shrink:0}
+.lm{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;letter-spacing:-.5px;line-height:1}
+.lm span{color:var(--g)}
+.ls{font-size:8px;color:#2a2a3a;letter-spacing:2px}
+/* Search bar in header */
+#hdr-search{flex:1;position:relative}
+#hdr-sinp{width:100%;background:var(--b2);border:1.5px solid var(--bd);border-radius:12px;padding:8px 36px 8px 12px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+#hdr-sinp:focus{border-color:var(--g)}
+#hdr-sinp::placeholder{color:var(--t3)}
+#hdr-clr{position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:14px;color:var(--t3);display:none;background:none;border:none;color:var(--t3)}
+
+/* ── TABS ── */
+#tabs{display:flex;background:#0a0a16;border-bottom:1px solid #0d0d1a;flex-shrink:0}
+.tab{flex:1;background:none;border:none;cursor:pointer;padding:9px 4px 7px;font-size:18px;color:var(--t3);transition:all .2s;position:relative;border-bottom:2px solid transparent}
+.tab.act{color:var(--tx);border-bottom-color:var(--g)}
+.fbdg{position:absolute;top:5px;right:50%;transform:translateX(8px);font-size:9px;background:var(--g);color:#000;border-radius:8px;padding:1px 4px;font-weight:700;line-height:1.2}
+
+/* ── DISTRICT FILTER (in feed only) ── */
+#dist-bar{display:flex;gap:5px;overflow-x:auto;padding:6px 12px 4px;scrollbar-width:none;flex-shrink:0;background:var(--bg)}
+#dist-bar::-webkit-scrollbar{display:none}
+.dbtn{border:none;cursor:pointer;border-radius:14px;padding:4px 11px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.dbtn.act{background:var(--g);color:#000}
+.dbtn:not(.act){background:var(--b2);color:var(--t3);border:1px solid #111}
+
+/* ── SCROLL AREA ── */
+#main{flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#main::-webkit-scrollbar{width:2px}
+#main::-webkit-scrollbar-thumb{background:#1a1a2e;border-radius:2px}
+.panel{display:none}
+.panel.act{display:block}
+
+/* ── FEED PANEL ── */
+#panel-feed{padding:8px 12px 80px}
+.cat-row{display:flex;gap:5px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+.cat-row::-webkit-scrollbar{display:none}
+.cbtn{border:none;cursor:pointer;border-radius:14px;padding:4px 12px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.cbtn.act{background:linear-gradient(135deg,var(--g),var(--g2));color:#000}
+.cbtn:not(.act){background:var(--b2);color:var(--t3);border:1px solid #111}
+
+/* ── CARD STACK ── */
+#card-area{position:relative;height:calc(100dvh - 200px);min-height:340px;max-height:520px;margin-bottom:10px;user-select:none}
+.card-behind{position:absolute;inset:0;border-radius:20px;transform:scale(.94) translateY(14px);z-index:1;overflow:hidden}
+.card-front{position:absolute;inset:0;border-radius:20px;z-index:2;overflow:hidden;cursor:grab;touch-action:none;background:#111}
+.card-front:active{cursor:grabbing}
+/* Photo as background */
+.card-photo{position:absolute;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat}
+.card-grad{position:absolute;bottom:0;left:0;right:0;height:75%;background:linear-gradient(to top,rgba(0,0,0,.98) 0%,rgba(0,0,0,.7) 45%,transparent 100%);pointer-events:none}
+.card-cat{position:absolute;top:12px;right:12px;z-index:5;background:rgba(0,0,0,.6);border-radius:16px;padding:3px 10px;font-size:10px;color:rgba(255,255,255,.85);backdrop-filter:blur(8px);pointer-events:none}
+.card-dist{position:absolute;top:12px;left:12px;z-index:5;background:rgba(0,0,0,.6);border-radius:16px;padding:3px 10px;font-size:10px;color:rgba(255,255,255,.7);backdrop-filter:blur(8px);pointer-events:none}
+.card-ib{position:absolute;bottom:92px;right:12px;z-index:8;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:14px;cursor:pointer;backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center}
+.card-content{position:absolute;bottom:0;left:0;right:0;padding:14px 14px 10px;pointer-events:none}
+.card-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#fff;line-height:1.1;margin-bottom:3px}
+.card-addr{font-size:10px;font-weight:500;margin-bottom:6px}
+.card-desc{font-size:11px;color:var(--t2);line-height:1.45;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tag{display:inline-block;padding:2px 7px;border-radius:12px;font-size:9px;font-weight:500;margin:1px;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);background:rgba(255,255,255,.06)}
+.card-meta{font-size:9px;color:#444;display:flex;gap:10px;margin-top:5px}
+/* Swipe indicators */
+.sind{position:absolute;top:18px;z-index:10;border:3px solid;border-radius:9px;padding:4px 12px;font-family:'Playfair Display',serif;font-weight:900;font-size:18px;background:rgba(0,0,0,.55);opacity:0;transition:opacity .1s;pointer-events:none}
+.sind.like{left:14px;border-color:#22c55e;color:#22c55e;transform:rotate(-14deg)}
+.sind.nope{right:14px;border-color:#ef4444;color:#ef4444;transform:rotate(14deg)}
+.sind.show{opacity:1}
+
+/* ── ACTION BUTTONS ── */
+.arow{display:flex;align-items:center;justify-content:center;gap:12px;padding:4px 0 2px}
+.ab{border:none;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;transition:transform .15s;flex-shrink:0}
+.ab:active{transform:scale(.88)!important}
+.ab.dl{width:50px;height:50px;background:#120808;border:2px solid #280e0e}
+.ab.un{width:36px;height:36px;background:var(--b2);border:1px solid var(--bd);font-size:14px}
+.ab.fv{width:60px;height:60px;background:linear-gradient(135deg,var(--g),var(--g2));font-size:26px;box-shadow:0 0 24px rgba(212,168,98,.4)}
+.ab.i2{width:36px;height:36px;background:var(--b2);border:1px solid var(--bd);font-size:14px}
+.ab.lk{width:50px;height:50px;background:#081208;border:2px solid #0e280e}
+.swipe-hint{text-align:center;font-size:9px;color:#1e1e1e;margin-top:4px}
+
+/* ── DONE STATE ── */
+.done{text-align:center;padding:40px 16px}
+
+/* ── LEADERBOARD ── */
+#panel-top{padding:12px 14px 80px}
+.panel-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;margin-bottom:2px}
+.psub{font-size:9px;color:#333;letter-spacing:1.5px;margin-bottom:12px}
+.period-row{display:flex;gap:5px;margin-bottom:16px}
+.pb{flex:1;padding:7px 0;border-radius:16px;border:1px solid #111;background:transparent;color:#444;font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;transition:all .2s}
+.pb.act{border-color:var(--g);background:rgba(212,168,98,.1);color:var(--g)}
+.lr{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #0d0d0d;cursor:pointer}
+.lrank{font-size:22px;width:28px;text-align:center;flex-shrink:0}
+.lnum{font-size:13px;font-weight:700;color:#333;width:28px;text-align:center;flex-shrink:0}
+.lthumb{width:42px;height:42px;border-radius:11px;flex-shrink:0;background:#111}
+.li{flex:1;min-width:0}
+.lname{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lmeta{font-size:10px;color:#444;margin-top:1px}
+.lsv{font-family:'Playfair Display',serif;font-size:16px;font-weight:900;color:var(--g);text-align:right}
+.lsl{font-size:9px;color:#333;text-align:right}
+.fbox{margin-top:16px;background:var(--b2);border-radius:13px;padding:13px;border:1px solid var(--b3);font-size:11px;color:var(--t2);line-height:1.8}
+
+/* ── FAVORITES ── */
+#panel-saved{padding:12px 14px 80px}
+.fc{background:var(--b2);border:1px solid var(--b3);border-radius:15px;padding:12px;margin-bottom:9px;display:flex;gap:10px;align-items:center;cursor:pointer}
+.ft{width:50px;height:50px;border-radius:12px;flex-shrink:0;background:#111}
+.fi{flex:1;min-width:0}
+.fn{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;margin-bottom:1px}
+.fa{font-size:10px;color:#444;margin-bottom:5px}
+.fdel{background:none;border:none;color:#222;font-size:17px;cursor:pointer;padding:3px;transition:color .2s;flex-shrink:0}
+.fdel:hover{color:#ef4444}
+.es{text-align:center;padding:48px 16px}
+
+/* ── PROFILE ── */
+#panel-profile{padding:12px 14px 80px}
+.ph{background:linear-gradient(135deg,var(--b3),#1a1a3a);border-radius:16px;padding:20px;text-align:center;margin-bottom:14px;border:1px solid var(--bd)}
+.pav{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--g2));display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 10px;overflow:hidden}
+.pav img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.pname{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;margin-bottom:3px}
+.pusr{font-size:11px;color:var(--t3)}
+.psg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:14px}
+.psc{background:var(--b2);border-radius:11px;padding:11px 6px;text-align:center;border:1px solid var(--b3)}
+.psv{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--g)}
+.psl{font-size:9px;color:#555;margin-top:1px}
+.psec{background:var(--b2);border-radius:13px;padding:14px;margin-bottom:11px;border:1px solid var(--b3)}
+.psec-title{font-size:9px;color:#333;letter-spacing:1.5px;margin-bottom:10px}
+.wip{background:rgba(212,168,98,.06);border:1px dashed rgba(212,168,98,.3);border-radius:13px;padding:14px;text-align:center;margin-bottom:11px}
+.fbbtn{width:100%;padding:13px;border-radius:13px;background:linear-gradient(135deg,var(--g),var(--g2));border:none;color:#000;font-family:'DM Sans',sans-serif;font-weight:700;font-size:14px;cursor:pointer;margin-top:6px}
+
+/* ── SEARCH RESULTS ── */
+#panel-search{padding:12px 14px 80px}
+.gs-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #0d0d0d;cursor:pointer}
+.gs-thumb{width:46px;height:46px;border-radius:11px;flex-shrink:0;background:#111}
+.gs-info{flex:1;min-width:0}
+.gs-name{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gs-sub{font-size:10px;color:#555;margin-top:1px}
+.gs-right{text-align:right;flex-shrink:0}
+.gs-r{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--g)}
+.gs-c{font-size:9px;color:#444}
+mark.hl{background:rgba(212,168,98,.3);border-radius:2px;padding:0 1px;color:inherit}
+
+/* ── RANDOM ── */
+#panel-random{padding:12px 14px 80px;text-align:center}
+
+/* ── DETAIL SHEET ── */
+.so{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.8);display:none;align-items:flex-end}
+.so.open{display:flex;animation:fadeIn .2s ease}
+.sh{background:#0c0c1a;border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;border:1px solid var(--b3);border-bottom:none;width:100%;animation:slideUp .3s cubic-bezier(.2,1,.3,1)}
+.sh::-webkit-scrollbar{width:2px}
+/* Photo gallery in sheet */
+.det-gallery{position:relative;height:200px;overflow:hidden;border-radius:20px 20px 0 0}
+.det-main-photo{width:100%;height:100%;background-size:cover;background-position:center}
+.det-gallery-strip{display:flex;gap:4px;padding:8px 14px 0}
+.gthumb{width:60px;height:48px;border-radius:8px;cursor:pointer;opacity:.7;transition:opacity .2s;flex-shrink:0}
+.gthumb.active{opacity:1;outline:2px solid var(--g)}
+.sh-close{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5}
+.sbod{padding:14px 14px 32px}
+.sname{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;line-height:1.1}
+.srat{color:#000;font-weight:700;font-size:13px;padding:3px 9px;border-radius:16px;flex-shrink:0}
+.sdesc{font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:10px}
+.mr{display:flex;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #0d0d0d}
+.mi{font-size:15px;width:22px;flex-shrink:0}
+.ml{font-size:10px;color:#444;width:90px;flex-shrink:0}
+.mv{font-size:12px;color:#aaa}
+.mvl{font-size:12px;color:var(--g);text-decoration:none}
+.sstats{display:flex;gap:6px;margin:14px 0 16px}
+.sst{flex:1;background:var(--b2);border-radius:11px;padding:10px 5px;text-align:center;border:1px solid var(--b3)}
+.ssti{font-size:16px;margin-bottom:3px}
+.sstv{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--g)}
+.sstl{font-size:9px;color:#444}
+.sctas{display:flex;gap:6px}
+.cm2{flex:1;padding:12px 0;border-radius:12px;background:linear-gradient(135deg,var(--g),var(--g2));border:none;color:#000;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer}
+.ci{width:44px;padding:12px 0;border-radius:12px;background:var(--b3);border:1px solid var(--bd);color:var(--tx);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none}
+
+/* ── FEEDBACK SHEET ── */
+#fb-ov .sh{padding:18px 14px 36px}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:rgba(10,10,22,.97);color:var(--tx);padding:9px 20px;border-radius:24px;font-size:12px;font-weight:500;border:1px solid var(--g);white-space:nowrap;z-index:500;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{opacity:1}
+
+/* ── IMAGE LOADING ── */
+.card-photo{background:#0d0d1a}
+
+/* ── ANIMATIONS ── */
+@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes dp{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.3);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── REVIEWS ── */
+.rev-item{padding:12px 0;border-bottom:1px solid #0d0d0d}
+.rev-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.rev-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--g2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;flex-shrink:0}
+.rev-name{font-size:12px;font-weight:600}
+.rev-date{font-size:10px;color:#444;margin-left:auto}
+.rev-stars{font-size:11px;margin-bottom:4px}
+.rev-text{font-size:12px;color:var(--t2);line-height:1.5}
+.rev-form{background:var(--b3);border-radius:14px;padding:14px;margin-top:14px}
+.rev-stars-pick{display:flex;gap:4px;font-size:24px;margin-bottom:10px;cursor:pointer}
+.rev-ta{width:100%;background:var(--b2);border:1px solid var(--bd);border-radius:10px;padding:10px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;resize:none;outline:none;min-height:80px}
+.rev-ta:focus{border-color:var(--g)}
+.rev-submit{width:100%;margin-top:8px;padding:11px;border-radius:12px;background:linear-gradient(135deg,var(--g),var(--g2));border:none;color:#000;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer}
+
+/* ── ACHIEVEMENTS ── */
+.ach-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.ach-item{background:var(--b2);border-radius:12px;padding:10px 6px;text-align:center;border:1px solid var(--b3);transition:all .2s}
+.ach-item.earned{border-color:var(--g);background:rgba(212,168,98,.08)}
+.ach-item.locked{opacity:.4}
+.ach-icon{font-size:24px;margin-bottom:4px}
+.ach-name{font-size:9px;color:var(--t3);line-height:1.3}
+.ach-item.earned .ach-name{color:var(--g)}
+
+/* ── MAP ── */
+#panel-map.act{display:flex}
+.map-venue-row{display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;transition:background .15s}
+.map-venue-row:active{background:rgba(255,255,255,.04)}
+.map-vthumb{width:36px;height:36px;border-radius:9px;flex-shrink:0}
+.map-vname{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.map-vaddr{font-size:10px;color:#444}
+
+/* ── GEO BUTTON ── */
+.geo-btn{position:fixed;bottom:80px;right:16px;z-index:50;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--g2));border:none;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;transition:transform .15s}
+.geo-btn:active{transform:scale(.9)}
+.geo-btn.vis{display:flex}
+
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="si">🏛️</div>
+  <div class="st">СВОЁ <span>МЕСТО</span></div>
+  <div class="ss">ВОЛГОГРАД</div>
+  <div class="sd"><div class="sdot"></div><div class="sdot"></div><div class="sdot"></div></div>
+</div>
+
+<!-- ONBOARDING -->
+<div id="onboard">
+  <div id="obc"></div>
+  <div class="obds" id="obds"></div>
+  <button class="obbtn" id="obnx">Далее →</button>
+  <button class="obsk" id="obsk">Пропустить</button>
+</div>
+
+<!-- HEADER with integrated search -->
+<div id="hdr" style="display:none">
+  <div class="logo">
+    <div class="lm">СВОЁ <span>МЕСТО</span></div>
+    <div class="ls">ВОЛГОГРАД</div>
+  </div>
+  <div id="hdr-search">
+    <input id="hdr-sinp" type="text" placeholder="🔍  Найти заведение..." autocomplete="off">
+    <button id="hdr-clr" onclick="clearHdrSearch()">✕</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div id="tabs" style="display:none">
+  <button class="tab act" data-tab="feed">🃏</button>
+  <button class="tab" data-tab="top">🏆</button>
+  <button class="tab" data-tab="saved">❤️<span class="fbdg" id="fbdg" style="display:none">0</span></button>
+  <button class="tab" data-tab="map">🗺️</button>
+  <button class="tab" data-tab="random">🎲</button>
+  <button class="tab" data-tab="profile">👤</button>
+</div>
+
+<!-- DISTRICT FILTER (feed only) -->
+<div id="dist-bar" style="display:none"></div>
+
+<!-- MAIN -->
+<div id="main" style="display:none">
+
+  <!-- FEED -->
+  <div class="panel act" id="panel-feed">
+    <div class="cat-row" id="cat-row"></div>
+    <div id="feed-content"></div>
+  </div>
+
+  <!-- SEARCH RESULTS (shown when typing in header) -->
+  <div class="panel" id="panel-search">
+    <div id="gs-info" style="font-size:9px;color:#333;letter-spacing:1.5px;padding:0 0 10px">ВСЕ ЗАВЕДЕНИЯ · ПО РЕЙТИНГУ</div>
+    <div id="gs-list"></div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="panel" id="panel-top">
+    <div class="panel-title">Лидеры <span style="color:var(--g)">города</span></div>
+    <div class="psub">РЕАЛЬНЫЕ ГОЛОСА ЖИТЕЛЕЙ</div>
+    <div class="period-row" id="prow"></div>
+    <div id="lbl"></div>
+    <div class="fbox">👍 Лайк = 1 очко &nbsp;·&nbsp; ❤️ Избранное = 2 очка<br>Рейтинг обновляется в реальном времени</div>
+  </div>
+
+  <!-- FAVORITES -->
+  <div class="panel" id="panel-saved">
+    <div class="panel-title">Избранное</div>
+    <div class="psub">МЕСТА ДЛЯ СЛЕДУЮЩЕГО ВИЗИТА</div>
+    <div id="favl"></div>
+  </div>
+
+  <!-- MAP -->
+  <div class="panel" id="panel-map" style="padding:0;height:100%;display:none;flex-direction:column">
+    <div style="padding:10px 14px 6px;flex-shrink:0;background:var(--bg)">
+      <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:6px">Карта <span style="color:var(--g)">заведений</span></div>
+      <div id="map-dist-row" style="display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none"></div>
+    </div>
+    <div id="map-frame-wrap" style="flex:1;position:relative">
+      <iframe id="map-frame"
+        style="width:100%;height:100%;border:none;display:block"
+        referrerpolicy="no-referrer-when-downgrade"
+        allowfullscreen
+        src="about:blank">
+      </iframe>
+      <div id="map-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);flex-direction:column;gap:12px">
+        <div style="font-size:32px">🗺️</div>
+        <div style="font-size:13px;color:var(--t3)">Загрузка карты...</div>
+      </div>
+    </div>
+    <div id="map-venue-list" style="flex-shrink:0;max-height:200px;overflow-y:auto;background:var(--bg);border-top:1px solid var(--bd);padding:8px 0"></div>
+  </div>
+
+  <!-- RANDOM -->
+  <div class="panel" id="panel-random">
+    <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:4px;text-align:center">Не можешь выбрать?</div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:24px;text-align:center">Нажми — судьба решит за тебя</div>
+    <div style="position:relative;width:240px;height:240px;margin:0 auto 22px">
+      <canvas id="spin-canvas" width="240" height="240" style="border-radius:50%;display:block"></canvas>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;background:var(--bg);border:3px solid var(--g);display:flex;align-items:center;justify-content:center;font-size:20px;z-index:10;box-shadow:0 0 0 4px var(--bg)">🎲</div>
+      <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:16px solid var(--g);z-index:11"></div>
+    </div>
+    <button id="spin-btn" onclick="doSpin()" style="background:linear-gradient(135deg,var(--g),var(--g2));border:none;color:#000;font-family:'DM Sans',sans-serif;font-weight:700;font-size:16px;padding:14px 0;border-radius:46px;cursor:pointer;width:100%;max-width:260px;box-shadow:0 0 24px rgba(212,168,98,.4)">🎰 Крутить!</button>
+    <div id="spin-result" style="display:none;margin-top:22px">
+      <div style="font-size:9px;color:#555;letter-spacing:2px;margin-bottom:10px;text-align:center">СУДЬБА ВЫБРАЛА</div>
+      <div id="spin-card" style="background:var(--b2);border-radius:16px;padding:16px;border:1px solid var(--bd);cursor:pointer;text-align:left" onclick="openDetailFromSpin()"></div>
+      <button onclick="doSpin()" style="margin-top:12px;background:transparent;border:1px solid var(--bd);color:var(--t3);font-family:'DM Sans',sans-serif;font-size:12px;padding:10px 0;border-radius:40px;cursor:pointer;width:100%;max-width:260px">Ещё раз 🔄</button>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <!-- MAP PANEL -->
+  <div class="panel" id="panel-map" style="padding:0">
+    <div style="display:flex;gap:5px;overflow-x:auto;padding:8px 12px;scrollbar-width:none;flex-shrink:0;background:var(--bg)" id="map-dist-ctrl"></div>
+    <div style="position:relative;height:calc(100dvh - 130px)">
+      <iframe id="map-frame" style="width:100%;height:100%;border:none" src="about:blank"></iframe>
+    </div>
+  </div>
+  <!-- ACHIEVEMENTS PANEL -->
+  <div class="panel" id="panel-ach" style="padding:12px 14px 80px">
+    <div style="font-family:'Playfair Display',serif;font-size:19px;font-weight:700;margin-bottom:2px">Достижения</div>
+    <div style="font-size:9px;color:#333;letter-spacing:1.5px;margin-bottom:12px">ТВОЙ ПРОГРЕСС</div>
+    <div id="ach-content"></div>
+  </div>
+  <div class="panel" id="panel-profile">
+    <div id="profile-content"></div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- DETAIL SHEET -->
+<div class="so" id="det-ov">
+  <div class="sh" id="det-sh"></div>
+</div>
+
+<!-- FEEDBACK SHEET -->
+<div class="so" id="fb-ov">
+  <div class="sh">
+    <div class="sbod">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="sname">Обратная связь</div>
+        <button class="sh-close" style="position:static" onclick="cS('fb-ov')">✕</button>
+      </div>
+      <p style="font-size:12px;color:var(--t3);margin-bottom:16px;line-height:1.6">Что нравится? Чего не хватает? Какие заведения добавить?</p>
+      <textarea id="fbt" placeholder="Напиши здесь..." style="width:100%;min-height:100px;background:var(--b2);border:1px solid var(--bd);border-radius:11px;padding:11px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:12px;resize:none;outline:none"></textarea>
+      <button onclick="sendFB()" style="width:100%;margin-top:10px;padding:12px;border-radius:12px;background:linear-gradient(135deg,var(--g),var(--g2));border:none;color:#000;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer">Отправить 📨</button>
+    </div>
+  </div>
+</div>
+
+<button class="geo-btn" id="geo-btn" onclick="findNearby()" title="Рядом со мной">📍</button>
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// FIREBASE
+// ══════════════════════════════════════════════════════
+const FB_CFG = {
+  apiKey:"AIzaSyCsM2AFalb0BGApo9oNBYt4XufCYJIEtm8",
+  authDomain:"svoe-mesto.firebaseapp.com",
+  databaseURL:"https://svoe-mesto-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"svoe-mesto",
+  storageBucket:"svoe-mesto.firebasestorage.app",
+  messagingSenderId:"927140581138",
+  appId:"1:927140581138:web:374cc4413f28de93d52dcb"
+};
+let fbDb = null;
+function initFB() {
+  try {
+    firebase.initializeApp(FB_CFG);
+    fbDb = firebase.database();
+    fbDb.ref('/reviews').on('value', snap => { S.fbReviews = snap.val()||{}; });
+    fbDb.ref('/scores').on('value', snap => {
+      S.fbScores = snap.val() || {};
+      if (S.tab === 'top') renderLB(S.fbScores);
+    });
+  } catch(e){ console.warn('FB:', e.message); }
+}
+function fbVote(id, isLike, isSave) {
+  if (!fbDb) return;
+  fbDb.ref('/scores/'+id).transaction(c => {
+    const d = c || {likes:0,saves:0,dislikes:0};
+    if (isSave) d.saves = (d.saves||0)+1;
+    else if (isLike) d.likes = (d.likes||0)+1;
+    else d.dislikes = (d.dislikes||0)+1;
+    return d;
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// VENUES DATA
+// ══════════════════════════════════════════════════════
+const VENUES = [
+// ═══ ЦЕНТРАЛЬНЫЙ РАЙОН ═══
+{id:1,n:"Solo Vicini",cat:"Ресторан",ic:"🍝",bg:"linear-gradient(145deg,#0a0a00,#1e1a00,#2d2600)",ac:"#d4af37",p:"₽₽₽",r:4.9,addr:"Аллея Героев, 1",dist:"Центральный",ph:"+7 8442 23-90-09",h:"12:00–00:00",ig:"solovicini_vlg",tags:["Итальянская","Терраса","Живая музыка"],desc:"Лучший итальянский ресторан города. Паста ручной лепки, трюфельные ризотто и вина из Тосканы.",lat:48.7071,lon:44.5170},
+{id:2,n:"Казан-Мангал",cat:"Ресторан",ic:"🫕",bg:"linear-gradient(145deg,#150800,#2d1500,#4a2200)",ac:"#f59e0b",p:"₽₽",r:4.8,addr:"ул. Краснознаменская, 12",dist:"Центральный",ph:"+7 8442 23-68-00",h:"11:00–23:00",ig:"kazan_mangal_vlg",tags:["Кавказская","Хинкали","Мангал"],desc:"Лучшая кавказская кухня. Свежие хинкали и шашлыки на углях.",lat:48.7083,lon:44.5140},
+{id:3,n:"Grinго's Гастробар",cat:"Бар",ic:"🌮",bg:"linear-gradient(145deg,#0a0000,#200800,#381200)",ac:"#ef4444",p:"₽₽",r:4.8,addr:"ул. Невская, 9",dist:"Центральный",ph:"+7 8442 26-58-22",h:"12:00–02:00",ig:"gringos_vlg",tags:["Гастробар","Бургеры","Коктейли"],desc:"Гастробар с лучшими бургерами и авторскими коктейлями. DJ по выходным.",lat:48.7095,lon:44.5162},
+{id:4,n:"Вкусный Дом",cat:"Ресторан",ic:"🥩",bg:"linear-gradient(145deg,#080300,#180900,#2d1200)",ac:"#dc2626",p:"₽₽₽",r:4.7,addr:"ул. Маршала Чуйкова, 19",dist:"Центральный",ph:"+7 8442 97-76-88",h:"12:00–23:00",ig:"vkusnyy_dom",tags:["Стейки","Терраса","Европейская"],desc:"Стейк-хаус с летней верандой. Мясо на углях и изысканное вино.",lat:48.7055,lon:44.5180},
+{id:5,n:"Раковарня",cat:"Бар",ic:"🦀",bg:"linear-gradient(145deg,#0a0000,#1f0505,#300a0a)",ac:"#f87171",p:"₽₽",r:4.6,addr:"ул. Рабоче-Крестьянская, 22",dist:"Центральный",ph:"+7 8442 60-60-60",h:"12:00–02:00",ig:"rakovarnya_vlg",tags:["Раки","Пиво","Морепродукты"],desc:"Русский паб со свежими раками и крафтовым пивом.",lat:48.7100,lon:44.5210},
+{id:6,n:"Маяк",cat:"Ресторан",ic:"🏮",bg:"linear-gradient(145deg,#020c1a,#071e38,#0a3060)",ac:"#4fc3f7",p:"₽₽",r:4.6,addr:"Набережная 62-й Армии, 1",dist:"Центральный",ph:"+7 8442 23-24-25",h:"12:00–00:00",ig:"mayak_vlg",tags:["Вид на Волгу","Живая музыка","Терраса"],desc:"Классический ресторан на набережной Волги. Живая музыка по выходным.",lat:48.7040,lon:44.5131},
+{id:7,n:"Бамберг",cat:"Ресторан",ic:"🍻",bg:"linear-gradient(145deg,#080400,#181000,#281800)",ac:"#f59e0b",p:"₽₽",r:4.5,addr:"ул. Советская, 20",dist:"Центральный",ph:"+7 8442 36-46-56",h:"11:00–00:00",ig:"bamberg_vlg",tags:["Немецкая","Пиво","Колбаски"],desc:"Немецкий ресторан с собственной пивоварней. Колбаски, рульки и баварское пиво.",lat:48.7105,lon:44.5155},
+{id:8,n:"Персонажи",cat:"Кафе",ic:"🎭",bg:"linear-gradient(145deg,#0a0a00,#1a1a00,#282800)",ac:"#a3e635",p:"₽₽",r:4.5,addr:"Аллея Героев, 1",dist:"Центральный",ph:"+7 8442 97-23-10",h:"09:00–23:00",ig:"personazhi_vlg",tags:["Авторская","Завтраки","Wi-Fi"],desc:"Уютное кафе на Аллее Героев с авторскими блюдами и отличными завтраками.",lat:48.7068,lon:44.5168},
+{id:9,n:"Вилла Капри",cat:"Ресторан",ic:"🌿",bg:"linear-gradient(145deg,#050a00,#0f1e00,#182e00)",ac:"#84cc16",p:"₽₽₽",r:4.5,addr:"ул. Комсомольская, 2А",dist:"Центральный",ph:"+7 8442 97-51-10",h:"12:00–00:00",ig:"villa_capri_vlg",tags:["Итальянская","Терраса","Романтика"],desc:"Итальянский ресторан с летней верандой. Пицца из дровяной печи и паста.",lat:48.7120,lon:44.5175},
+{id:10,n:"Швейк",cat:"Ресторан",ic:"🍺",bg:"linear-gradient(145deg,#060300,#120800,#1e0e00)",ac:"#d97706",p:"₽₽",r:4.4,addr:"ул. Советская, 3",dist:"Центральный",ph:"+7 8442 38-14-58",h:"11:00–00:00",ig:"shveyk_vlg",tags:["Чешская","Пиво","Гуляш"],desc:"Чешский ресторан. Разливное пиво, гуляш и свиное колено.",lat:48.7090,lon:44.5145},
+{id:11,n:"Руставели",cat:"Ресторан",ic:"🥘",bg:"linear-gradient(145deg,#0a0500,#1e1000,#2d1800)",ac:"#ef4444",p:"₽₽",r:4.4,addr:"ул. Краснознаменская, 12",dist:"Центральный",ph:"+7 8442 23-68-01",h:"11:00–23:00",ig:"rustaveli_vlg",tags:["Грузинская","Хачапури","Хинкали"],desc:"Грузинский ресторан. Хачапури по-аджарски и домашнее вино.",lat:48.7083,lon:44.5138},
+{id:12,n:"Траттория Римини",cat:"Ресторан",ic:"🇮🇹",bg:"linear-gradient(145deg,#0c0005,#200a15,#301525)",ac:"#e879f9",p:"₽₽",r:4.4,addr:"ул. Советская, 27",dist:"Центральный",ph:"+7 8442 97-22-80",h:"12:00–00:00",ig:"rimini_vlg",tags:["Итальянская","Пицца","Паста"],desc:"Семейная траттория с итальянской атмосферой. Пицца и паста.",lat:48.7098,lon:44.5152},
+{id:13,n:"Nosorog",cat:"Ресторан",ic:"🦏",bg:"linear-gradient(145deg,#050a00,#0d1e00,#152e00)",ac:"#22c55e",p:"₽₽",r:4.3,addr:"ул. Мира, 20",dist:"Центральный",ph:"+7 8442 97-34-44",h:"12:00–00:00",ig:"nosorog_vlg",tags:["Европейская","Бизнес-ланч","Бар"],desc:"Ресторан-бар. Европейская кухня и отличный бизнес-ланч.",lat:48.7076,lon:44.5192},
+{id:14,n:"Лондон",cat:"Ресторан",ic:"🎩",bg:"linear-gradient(145deg,#050510,#0e0e28,#181840)",ac:"#818cf8",p:"₽₽₽",r:4.4,addr:"ул. Краснознаменская, 25Б",dist:"Центральный",ph:"+7 8442 97-88-21",h:"12:00–00:00",ig:"london_vlg",tags:["Европейская","Коктейли","Живая музыка"],desc:"Ресторан в британском стиле. Изысканная кухня и живая музыка.",lat:48.7087,lon:44.5130},
+{id:15,n:"Бочка",cat:"Бар",ic:"🛢️",bg:"linear-gradient(145deg,#060300,#140800,#201000)",ac:"#f59e0b",p:"₽",r:4.3,addr:"ул. Советская, 16",dist:"Центральный",ph:"+7 8442 97-78-90",h:"12:00–02:00",ig:"bochka_vlg",tags:["Пиво","Спорт","Недорого"],desc:"Пивной ресторан с крафтом. Трансляции матчей и закуски.",lat:48.7093,lon:44.5148},
+{id:16,n:"Ледникъ",cat:"Бар",ic:"🧊",bg:"linear-gradient(145deg,#001520,#002d42,#004060)",ac:"#7dd3fc",p:"₽₽",r:4.2,addr:"ул. 10-й Дивизии НКВД, 5А",dist:"Центральный",ph:"+7 8442 97-09-09",h:"17:00–04:00",ig:"lednik_bar",tags:["Коктейли","DJ","Танцпол"],desc:"Атмосферный бар. 60+ коктейлей и еженедельные DJ-сеты.",lat:48.7110,lon:44.5170},
+{id:17,n:"Массимо",cat:"Кофейня",ic:"☕",bg:"linear-gradient(145deg,#0a0500,#201000,#301800)",ac:"#d4a862",p:"₽₽",r:4.3,addr:"ул. Мира, 12",dist:"Центральный",ph:"+7 8442 52-81-22",h:"08:00–22:00",ig:"massimo_cafe_vlg",tags:["Кофе","Завтраки","Wi-Fi"],desc:"Кафе в сердце города. Кофе и завтраки.",lat:48.7073,lon:44.5188},
+{id:18,n:"Ведров Бар",cat:"Бар",ic:"🪣",bg:"linear-gradient(145deg,#030010,#08001e,#0d0030)",ac:"#818cf8",p:"₽₽",r:4.5,addr:"ул. Советская, 17",dist:"Центральный",ph:"+7 8442 00-22-17",h:"12:00–02:00",ig:"bar_vedrov_bar",tags:["Коктейли","Японская","Терраса","VIP"],desc:"Бар на первом этаже Центрального рынка. Авторские коктейли и японская кухня.",lat:48.7102,lon:44.5155},
+{id:19,n:"Жигули Рестобар",cat:"Ресторан",ic:"🍺",bg:"linear-gradient(145deg,#080300,#180800,#281200)",ac:"#f59e0b",p:"₽₽",r:4.6,addr:"ул. Советская, 5",dist:"Центральный",ph:"+7 8442 23-07-34",h:"12:00–00:00",ig:"zhiguli_restobar",tags:["Русская","Терраса","Бизнес-ланч","Раки"],desc:"Рестобар с блюдами из локальных продуктов. Новая русская кухня и терраса.",lat:48.7088,lon:44.5143},
+{id:20,n:"Jetlag",cat:"Кофейня",ic:"✈️",bg:"linear-gradient(145deg,#080500,#181000,#252000)",ac:"#fbbf24",p:"₽₽",r:4.7,addr:"ул. Маршала Чуйкова, 9",dist:"Центральный",ph:"+7 937 555-43-21",h:"07:00–23:00",ig:"jetlag_coffee",tags:["Specialty","Завтраки","Пончики","Терраса"],desc:"Культовая кофейня. Specialty-кофе, авторские пончики и сэндвичи.",lat:48.7052,lon:44.5185},
+{id:21,n:"Just Coffee",cat:"Кофейня",ic:"☕",bg:"linear-gradient(145deg,#0a0600,#1e1200,#2d1c00)",ac:"#d4a862",p:"₽",r:4.5,addr:"ул. Маршала Чуйкова, 9",dist:"Центральный",ph:"+7 927 524-42-44",h:"07:00–23:00",ig:"justcoffee_vlg",tags:["Кофе","Десерты","Wi-Fi"],desc:"Кофейня с десертами со всего мира. Каждый 6-й кофе бесплатно.",lat:48.7052,lon:44.5185},
+{id:22,n:"ZiRA Garden",cat:"Ресторан",ic:"🌿",bg:"linear-gradient(145deg,#030d00,#081e00,#0d2d00)",ac:"#86efac",p:"₽₽₽",r:4.8,addr:"Аллея Героев, 2",dist:"Центральный",ph:"+7 8442 25-50-60",h:"07:30–00:00",ig:"ziragarden_vlg",tags:["Восточная","Панорама","Завтраки","Веранда"],desc:"Ресторан восточной кухни с панорамным видом. Тажины, хумус и завтраки.",lat:48.7065,lon:44.5162},
+{id:23,n:"So So Coffee",cat:"Кофейня",ic:"🫶",bg:"linear-gradient(145deg,#050a05,#0d1a0d,#152515)",ac:"#a3e635",p:"₽₽",r:4.6,addr:"ул. Мира, 26",dist:"Центральный",ph:"+7 8442 00-26-26",h:"08:30–23:00",ig:"sosocoffee_vlg",tags:["Specialty","Уютно","Wi-Fi","Работа"],desc:"Камерная specialty-кофейня с авторскими напитками. Тихая атмосфера для работы.",lat:48.7093,lon:44.5150},
+{id:24,n:"Хачапури Марико",cat:"Ресторан",ic:"🧆",bg:"linear-gradient(145deg,#0a0005,#180010,#25001a)",ac:"#f472b6",p:"₽₽",r:4.8,addr:"ТРК Европа Сити Молл, пр. Ленина, 54Б",dist:"Центральный",ph:"+7 8442 97-00-01",h:"10:00–23:00",ig:"mariko_vlg",tags:["Грузинская","Хачапури","Скидки"],desc:"Уголок Грузии в Волгограде. Хачапури, хинкали. Скидка именинникам 25%.",lat:48.7068,lon:44.5166},
+{id:25,n:"Жаба Бар",cat:"Бар",ic:"🐸",bg:"linear-gradient(145deg,#021000,#083000,#0c4800)",ac:"#4ade80",p:"₽₽",r:4.2,addr:"ул. Краснознаменская, 10",dist:"Центральный",ph:"+7 8442 97-00-05",h:"16:00–03:00",ig:"zhaba_bar_vlg",tags:["Коктейли","Крафт","Вечеринки"],desc:"Атмосферный бар с авторскими коктейлями и крафтовым пивом.",lat:48.7081,lon:44.5135},
+{id:26,n:"Бруклин",cat:"Ресторан",ic:"🗽",bg:"linear-gradient(145deg,#050510,#0e0e20,#181830)",ac:"#818cf8",p:"₽₽",r:4.2,addr:"пр. Ленина, 1Б",dist:"Центральный",ph:"+7 8442 97-00-06",h:"12:00–00:00",ig:"brooklyn_vlg",tags:["Американская","Бургеры","Стейки"],desc:"Ресторан в американском стиле. Лучшие бургеры и стейки.",lat:48.7063,lon:44.5160},
+{id:27,n:"Hampton by Hilton",cat:"Ресторан",ic:"🏨",bg:"linear-gradient(145deg,#080010,#150025,#1e0038)",ac:"#a78bfa",p:"₽₽₽",r:4.5,addr:"ул. Профсоюзная, 13",dist:"Центральный",ph:"+7 8442 41-00-00",h:"07:00–23:00",ig:"hamptonvolgograd",tags:["Завтраки","Европейская","Отель"],desc:"Ресторан отеля Hilton. Шведский стол на завтрак.",lat:48.7062,lon:44.5158},
+{id:28,n:"Frant",cat:"Ресторан",ic:"🎸",bg:"linear-gradient(145deg,#0a0000,#200000,#300000)",ac:"#ef4444",p:"₽₽",r:4.4,addr:"ул. Советская, 36",dist:"Центральный",ph:"+7 8442 97-00-02",h:"12:00–02:00",ig:"frant_vlg",tags:["Европейская","Рок","Живая музыка"],desc:"Ресторан-бар с рок-атмосферой. Европейская кухня и живая музыка.",lat:48.7100,lon:44.5155},
+{id:29,n:"Якудза",cat:"Кафе",ic:"🍣",bg:"linear-gradient(145deg,#05001a,#0f0035,#180050)",ac:"#a855f7",p:"₽₽",r:4.4,addr:"ул. Мира, 9",dist:"Центральный",ph:"+7 8442 97-00-03",h:"11:00–23:00",ig:"yakuza_vlg",tags:["Японская","Роллы","Суши"],desc:"Японский ресторан. Свежие роллы и авторское меню.",lat:48.7071,lon:44.5195},
+{id:30,n:"Пинта",cat:"Бар",ic:"🍻",bg:"linear-gradient(145deg,#050300,#100800,#1a1000)",ac:"#d97706",p:"₽₽",r:4.3,addr:"ул. Краснознаменская, 8",dist:"Центральный",ph:"+7 8442 97-00-04",h:"14:00–03:00",ig:"pinta_vlg",tags:["Крафт","Пиво","Спорт"],desc:"Крафтовый бар с 30+ сортами пива и трансляциями матчей.",lat:48.7079,lon:44.5133},
+// ═══ ВОРОШИЛОВСКИЙ ═══
+{id:31,n:"Слиffки Общества",cat:"Ресторан",ic:"🦢",bg:"linear-gradient(145deg,#0a0010,#180028,#260040)",ac:"#c084fc",p:"₽₽₽",r:4.7,addr:"ул. Рабоче-Крестьянская, 10",dist:"Ворошиловский",ph:"+7 8442 60-66-60",h:"12:00–02:00",ig:"slivki_vlg",tags:["Авторская","Живая музыка","Шоу"],desc:"Главный ресторан района. Авторская кухня и шоу-программы.",lat:48.5280,lon:44.4250},
+{id:32,n:"Marusya",cat:"Кафе",ic:"🌺",bg:"linear-gradient(145deg,#120000,#2d0a0a,#3d1010)",ac:"#f87171",p:"₽₽",r:4.5,addr:"Аллея Героев, 1",dist:"Ворошиловский",ph:"+7 8442 60-30-10",h:"09:00–23:00",ig:"marusya_vlg",tags:["Русская","Завтраки","Пироги"],desc:"Домашняя русская кухня. Пироги по бабушкиным рецептам.",lat:48.5275,lon:44.4260},
+{id:33,n:"Сыроварня",cat:"Ресторан",ic:"🧀",bg:"linear-gradient(145deg,#0a0800,#1a1500,#2a2000)",ac:"#fde68a",p:"₽₽",r:4.4,addr:"ул. Рабоче-Крестьянская, 22",dist:"Ворошиловский",ph:"+7 8442 60-55-55",h:"11:00–23:00",ig:"syrovarnya_vlg",tags:["Русская","Сыры","Бизнес-ланч"],desc:"Ресторан Novikov Group. Авторская кухня с акцентом на сыры.",lat:48.5270,lon:44.4240},
+{id:34,n:"Plaza",cat:"Ресторан",ic:"✨",bg:"linear-gradient(145deg,#08050a,#141028,#1e183d)",ac:"#818cf8",p:"₽₽₽",r:4.4,addr:"ул. Новоузенская, 2/1",dist:"Ворошиловский",ph:"+7 8442 67-77-07",h:"12:00–00:00",ig:"plaza_vlg",tags:["Европейская","Банкеты","Живая музыка"],desc:"Ресторан для торжеств. Европейская кухня и большой зал.",lat:48.5290,lon:44.4270},
+{id:35,n:"Сказка",cat:"Кафе",ic:"🧁",bg:"linear-gradient(145deg,#0a0010,#15001a,#1e0025)",ac:"#e879f9",p:"₽₽",r:4.4,addr:"ул. Рабоче-Крестьянская, 38А",dist:"Ворошиловский",ph:"+7 8442 60-40-40",h:"10:00–22:00",ig:"skazka_vlg",tags:["Торты","Десерты","Детям"],desc:"Кафе-кондитерская с тортами и десертами.",lat:48.5265,lon:44.4235},
+{id:36,n:"Бульон",cat:"Кафе",ic:"🍲",bg:"linear-gradient(145deg,#050a00,#101e00,#182e00)",ac:"#86efac",p:"₽",r:4.3,addr:"ул. Рабоче-Крестьянская, 16",dist:"Ворошиловский",ph:"+7 8442 60-10-20",h:"09:00–22:00",ig:"bulyion_vlg",tags:["Домашняя","Супы","Недорого"],desc:"Уютное кафе с домашней едой. Вкусные супы и обеды.",lat:48.5272,lon:44.4245},
+{id:37,n:"Трактир на Ардатовской",cat:"Кафе",ic:"🥃",bg:"linear-gradient(145deg,#080400,#160c00,#221400)",ac:"#d97706",p:"₽₽",r:4.3,addr:"ул. Ардатовская, 29",dist:"Ворошиловский",ph:"+7 8442 60-50-50",h:"11:00–23:00",ig:"traktir_ardatov",tags:["Русская","Бильярд","Банкеты"],desc:"Русский трактир с домашней кухней и бильярдом.",lat:48.5260,lon:44.4230},
+{id:38,n:"Baguette",cat:"Кофейня",ic:"🥐",bg:"linear-gradient(145deg,#100800,#221500,#302000)",ac:"#fbbf24",p:"₽",r:4.2,addr:"ул. Рабоче-Крестьянская, 48",dist:"Ворошиловский",ph:"+7 8442 60-20-20",h:"07:00–21:00",ig:"baguette_vlg",tags:["Выпечка","Кофе","Завтраки"],desc:"Французская кондитерская. Свежие круассаны каждое утро.",lat:48.5255,lon:44.4225},
+{id:39,n:"Княгининский Дворъ",cat:"Ресторан",ic:"🏰",bg:"linear-gradient(145deg,#060302,#120800,#1e1000)",ac:"#a16207",p:"₽₽₽",r:4.2,addr:"ул. Академическая, 8",dist:"Ворошиловский",ph:"+7 8442 67-50-00",h:"12:00–23:00",ig:"knyaginins_vlg",tags:["Дичь","Охотничья","Банкеты"],desc:"Ресторан охотничьей кухни. Блюда из дичи.",lat:48.5285,lon:44.4280},
+// ═══ ДЗЕРЖИНСКИЙ ═══
+{id:40,n:"Ресторация Слиffки",cat:"Ресторан",ic:"🦚",bg:"linear-gradient(145deg,#050010,#0f0028,#180040)",ac:"#a855f7",p:"₽₽₽",r:4.6,addr:"ул. им. Хользунова, 38",dist:"Дзержинский",ph:"+7 8442 97-75-75",h:"12:00–02:00",ig:"slivki_dzerzh",tags:["Авторская","Банкеты","Живая музыка"],desc:"Главный ресторан района. Авторская кухня и живая музыка.",lat:48.5800,lon:44.4700},
+{id:41,n:"Ай да Хуторок",cat:"Ресторан",ic:"🌾",bg:"linear-gradient(145deg,#060300,#141000,#201800)",ac:"#f59e0b",p:"₽₽",r:4.5,addr:"ул. Историческая, 155",dist:"Дзержинский",ph:"+7 8442 97-99-97",h:"11:00–23:00",ig:"ay_da_khutorok",tags:["Казачья","Русская","Банкеты"],desc:"Ресторан в казачьем стиле. Традиционная русская кухня.",lat:48.5780,lon:44.4680},
+{id:42,n:"Золотая Прага",cat:"Бар",ic:"🍺",bg:"linear-gradient(145deg,#060400,#121000,#1c1800)",ac:"#fbbf24",p:"₽₽",r:4.4,addr:"ул. Историческая, 175",dist:"Дзержинский",ph:"+7 8442 97-10-20",h:"12:00–02:00",ig:"zolotaya_praga",tags:["Чешское пиво","Спорт","Закуски"],desc:"Бар с чешским разливным пивом. Спортивные трансляции.",lat:48.5770,lon:44.4670},
+{id:43,n:"Юность",cat:"Кафе",ic:"🌈",bg:"linear-gradient(145deg,#001018,#002230,#003850)",ac:"#38bdf8",p:"₽",r:4.3,addr:"пр. им. Ленина, 220",dist:"Дзержинский",ph:"+7 8442 97-20-30",h:"08:00–22:00",ig:"yunost_cafe_vlg",tags:["Бизнес-ланч","Недорого","Завтраки"],desc:"Народное кафе с вкусными обедами и бизнес-ланчем.",lat:48.5760,lon:44.4660},
+{id:44,n:"Перцы Пицца",cat:"Кафе",ic:"🍕",bg:"linear-gradient(145deg,#100000,#280000,#3d0000)",ac:"#ef4444",p:"₽",r:4.2,addr:"ул. Рабоче-Крестьянская, 48",dist:"Дзержинский",ph:"+7 8442 60-75-75",h:"10:00–23:00",ig:"percy_pizza_vlg",tags:["Пицца","Доставка","Недорого"],desc:"Пиццерия с большим выбором пицц и быстрой доставкой.",lat:48.5750,lon:44.4650},
+// ═══ КРАСНООКТЯБРЬСКИЙ ═══
+{id:45,n:"Корона",cat:"Ресторан",ic:"👑",bg:"linear-gradient(145deg,#0a0000,#200505,#300a0a)",ac:"#fca5a5",p:"₽₽",r:4.3,addr:"ул. Маршала Ерёменко, 51",dist:"Краснооктябрьский",ph:"+7 8442 55-10-10",h:"11:00–23:00",ig:"korona_vlg",tags:["Европейская","Банкеты","Живая музыка"],desc:"Ресторан с богатым интерьером. Европейская кухня для торжеств.",lat:48.5650,lon:44.4550},
+{id:46,n:"Хванч",cat:"Ресторан",ic:"🍷",bg:"linear-gradient(145deg,#0a0005,#1e000f,#2d0018)",ac:"#fb7185",p:"₽₽",r:4.3,addr:"ул. Маршала Ерёменко, 3Г",dist:"Краснооктябрьский",ph:"+7 8442 55-20-20",h:"12:00–00:00",ig:"hvanch_vlg",tags:["Грузинская","Вино","Хачапури"],desc:"Грузинский ресторан с акцентом на вино.",lat:48.5640,lon:44.4540},
+{id:47,n:"Апельсин",cat:"Кафе",ic:"🍊",bg:"linear-gradient(145deg,#0a0500,#1e1000,#301800)",ac:"#fb923c",p:"₽₽",r:4.2,addr:"ул. Чистоозёрная, 2",dist:"Краснооктябрьский",ph:"+7 8442 55-30-30",h:"10:00–22:00",ig:"apelsin_vlg",tags:["Европейская","Бизнес-ланч","Семейное"],desc:"Светлое кафе с европейской кухней.",lat:48.5660,lon:44.4560},
+{id:48,n:"ХЛЕБ",cat:"Кофейня",ic:"🥖",bg:"linear-gradient(145deg,#0a0500,#201500,#302000)",ac:"#fbbf24",p:"₽",r:4.2,addr:"пр. им. Ленина, 97",dist:"Краснооктябрьский",ph:"+7 8442 55-40-40",h:"08:00–21:00",ig:"hleb_cafe_vlg",tags:["Выпечка","Кофе","Завтраки"],desc:"Кофейня с ароматной выпечкой.",lat:48.5630,lon:44.4530},
+{id:49,n:"Шинок",cat:"Бар",ic:"🪗",bg:"linear-gradient(145deg,#0a0800,#1a1500,#2a2000)",ac:"#fde68a",p:"₽₽",r:4.0,addr:"ул. Маршала Ерёменко, 68",dist:"Краснооктябрьский",ph:"+7 8442 55-70-70",h:"14:00–02:00",ig:"shinok_vlg",tags:["Украинская","Пиво","Живая музыка"],desc:"Бар с украинскими мотивами и народной музыкой.",lat:48.5620,lon:44.4520},
+// ═══ КРАСНОАРМЕЙСКИЙ ═══
+{id:50,n:"Брискетта",cat:"Ресторан",ic:"🥩",bg:"linear-gradient(145deg,#0a0000,#200505,#2d0808)",ac:"#ef4444",p:"₽₽",r:4.4,addr:"ул. 50 лет Октября, 20А",dist:"Красноармейский",ph:"+7 8442 45-10-10",h:"11:00–23:00",ig:"brisketta_vlg",tags:["Стейки","Гриль","Терраса"],desc:"Ресторан с акцентом на мясо. Стейки на гриле.",lat:48.5200,lon:44.5600},
+{id:51,n:"Облепиха",cat:"Кафе",ic:"🫐",bg:"linear-gradient(145deg,#050800,#0f1a00,#182500)",ac:"#fbbf24",p:"₽₽",r:4.3,addr:"пр. Героев Сталинграда, 44А",dist:"Красноармейский",ph:"+7 8442 45-20-20",h:"09:00–22:00",ig:"oblepiha_vlg",tags:["Русская","Десерты","Завтраки"],desc:"Кафе с домашней кухней и авторскими десертами.",lat:48.5180,lon:44.5580},
+{id:52,n:"Мимино",cat:"Ресторан",ic:"🕊️",bg:"linear-gradient(145deg,#0a0005,#150010,#1e0020)",ac:"#c084fc",p:"₽₽",r:4.2,addr:"б-р Энгельса, 36Б",dist:"Красноармейский",ph:"+7 8442 45-40-40",h:"11:00–23:00",ig:"mimino_vlg",tags:["Грузинская","Хачапури","Хинкали"],desc:"Грузинский ресторан. Хачапури и хинкали.",lat:48.5160,lon:44.5560},
+// ═══ СОВЕТСКИЙ ═══
+{id:53,n:"Альтернатива",cat:"Ресторан",ic:"🔥",bg:"linear-gradient(145deg,#100000,#250500,#350800)",ac:"#f97316",p:"₽₽",r:4.4,addr:"ул. 8-й Воздушной Армии, 14",dist:"Советский",ph:"+7 8442 35-10-10",h:"12:00–00:00",ig:"alternativa_vlg",tags:["Авторская","Гриль","Живая музыка"],desc:"Ресторан-бар с авторской кухней. Гриль и живая музыка.",lat:48.5900,lon:44.4400},
+{id:54,n:"Берлога",cat:"Бар",ic:"🐻",bg:"linear-gradient(145deg,#030a00,#081500,#0d2000)",ac:"#4ade80",p:"₽₽",r:4.2,addr:"ул. Архитекторская, 12",dist:"Советский",ph:"+7 8442 35-40-40",h:"15:00–03:00",ig:"berloga_bar_vlg",tags:["Крафт","Бургеры","Спорт"],desc:"Крафтовый бар с авторскими бургерами.",lat:48.5880,lon:44.4380},
+// ═══ ТРАКТОРОЗАВОДСКИЙ ═══
+{id:55,n:"Пиратская Пристань",cat:"Ресторан",ic:"🚢",bg:"linear-gradient(145deg,#020c1a,#051e38,#082d50)",ac:"#38bdf8",p:"₽₽",r:4.3,addr:"бул. 30-летия Победы, 12",dist:"Тракторозаводский",ph:"+7 8442 75-20-20",h:"12:00–00:00",ig:"pirate_vlg",tags:["Морская","Рыба","Детям","Шоу"],desc:"Ресторан в пиратской тематике. Детские шоу и морская кухня.",lat:48.5600,lon:44.3900},
+{id:56,n:"Восток",cat:"Кафе",ic:"🌙",bg:"linear-gradient(145deg,#050010,#0f0028,#160038)",ac:"#a78bfa",p:"₽",r:4.0,addr:"ул. Кирова, 121А",dist:"Тракторозаводский",ph:"+7 8442 75-40-40",h:"10:00–22:00",ig:"vostok_cafe_vlg",tags:["Узбекская","Плов","Шашлык"],desc:"Кафе узбекской кухни. Плов, лагман и шашлык.",lat:48.5580,lon:44.3880},
+// ═══ КИРОВСКИЙ ═══
+{id:57,n:"Причал",cat:"Ресторан",ic:"⚓",bg:"linear-gradient(145deg,#001520,#002d42,#004060)",ac:"#38bdf8",p:"₽₽",r:4.3,addr:"ул. им. Маршала Ерёменко, 7",dist:"Кировский",ph:"+7 8442 25-10-10",h:"12:00–00:00",ig:"prichal_vlg",tags:["Морская","Рыба","Вид на Волгу"],desc:"Ресторан у воды с видом на Волгу. Рыбные блюда и морепродукты.",lat:48.5400,lon:44.5000},
+{id:58,n:"Арго",cat:"Ресторан",ic:"🚢",bg:"linear-gradient(145deg,#020c1a,#061e38,#0a2d50)",ac:"#4fc3f7",p:"₽₽",r:4.2,addr:"Волжская набережная, 10",dist:"Кировский",ph:"+7 8442 25-20-20",h:"12:00–23:00",ig:"argo_vlg",tags:["Европейская","Набережная","Романтика"],desc:"Ресторан на набережной Волги. Европейская кухня.",lat:48.5380,lon:44.4980},
+];
+
+const CATS = ["Все","Ресторан","Кафе","Бар","Кофейня"];
+const DISTS = ["Все","Центральный","Ворошиловский","Дзержинский","Краснооктябрьский","Красноармейский","Советский","Тракторозаводский","Кировский"];
+const OB = [
+  {ic:"🃏",t:"Открывай новые места",d:"Листай карточки заведений как в Тиндере. Вправо — нравится, влево — не твоё."},
+  {ic:"❤️",t:"Сохраняй в избранное",d:"Добавляй понравившиеся кафе и рестораны в список «Хочу посетить»."},
+  {ic:"🏆",t:"Влияй на рейтинг",d:"Твои голоса формируют реальный лидерборд лучших заведений Волгограда."}
+];
+
+// ══════════════════════════════════════════════════════
+// TELEGRAM
+// ══════════════════════════════════════════════════════
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor?.('#06060e'); tg.setBackgroundColor?.('#06060e'); }
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let S = {
+  user: null, localReviews: {}, achievements: {}, fbReviews: {}, tab:'feed', cat:'Все', dist:'Все', search:'',
+  queue:[], skipped:[], favs:[], voted:{}, lbPeriod:2,
+  seed:null, fbScores:null
+};
+
+// ── STORAGE KEY — includes Telegram user ID if available for cross-device persistence ──
+function storageKey() {
+  const uid = tg?.initDataUnsafe?.user?.id;
+  return uid ? `sm_${uid}` : 'sm_guest';
+}
+
+function saveAll() {
+  try {
+    localStorage.setItem(storageKey(), JSON.stringify({
+      queue: S.queue, skipped: S.skipped,
+      favs: S.favs.map(v => v.id),
+      voted: S.voted, seed: S.seed,
+      reviews: S.reviews || {},
+      earnedAch: S.earnedAch || {},
+      savedAt: Date.now()
+    }));
+  } catch(e){}
+}
+
+function loadAll() {
+  try {
+    // Try user-specific key first, fallback to guest
+    const uid = tg?.initDataUnsafe?.user?.id;
+    let raw = localStorage.getItem(uid ? `sm_${uid}` : 'sm_guest');
+    // also try old key for backward compat
+    if (!raw) raw = localStorage.getItem('svoe_mesto_v2');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (d.queue)   S.queue   = d.queue;
+    if (d.skipped) S.skipped = d.skipped;
+    if (d.voted)   S.voted   = d.voted || {};
+    if (d.seed)    S.seed    = d.seed;
+    if (d.favs)    S.favs    = d.favs.map(id => VENUES.find(v=>v.id===id)).filter(Boolean);
+    if (d.reviews)  S.reviews   = d.reviews;
+    if (d.earnedAch) S.earnedAch = d.earnedAch;
+  } catch(e){}
+}
+
+// ── SEEDED SHUFFLE ──
+function seededRng(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5|0;
+    let t = Math.imul(seed ^ seed>>>15, 1|seed);
+    t = t + Math.imul(t ^ t>>>7, 61|t) ^ t;
+    return ((t ^ t>>>14)>>>0) / 4294967296;
+  };
+}
+function shuffle(arr, rng) {
+  const a = [...arr];
+  for (let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function initQueue() {
+  const all = VENUES.map(v=>v.id);
+  if (!S.queue || !S.queue.length) {
+    if (!S.seed) S.seed = Math.floor(Math.random()*2147483647)+1;
+    const rng = seededRng(S.seed);
+    S.queue = shuffle(all, rng).filter(id => !(S.skipped||[]).includes(id));
+  } else {
+    // Add new venues not yet seen
+    const seen = new Set([...S.queue,...(S.skipped||[])]);
+    const newIds = all.filter(id=>!seen.has(id));
+    if (newIds.length) {
+      const rng = seededRng((S.seed||1)+Date.now());
+      newIds.forEach(id=>{ const p=Math.floor(rng()*(S.queue.length+1)); S.queue.splice(p,0,id); });
+    }
+  }
+}
+
+// Load & init
+loadAll();
+initQueue();
+
+// ── TG USER ──
+(function setUser() {
+  const u = tg?.initDataUnsafe?.user;
+  if (u) S.user = u;
+})();
+
+// ══════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════
+let toastT;
+function toast(m) {
+  const el=document.getElementById('toast');
+  el.textContent=m; el.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),2200);
+  tg?.HapticFeedback?.notificationOccurred('success');
+}
+function oS(id){document.getElementById(id)?.classList.add('open');}
+function cS(id){document.getElementById(id)?.classList.remove('open');}
+document.querySelectorAll('.so').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+
+function venueScore(v) {
+  const sc = S.fbScores?.[v.id] || {likes:0,saves:0};
+  return (sc.likes||0) + (sc.saves||0)*2;
+}
+function updateFavBadge() {
+  const b=document.getElementById('fbdg');
+  if(S.favs.length){b.style.display='inline';b.textContent=S.favs.length;}
+  else b.style.display='none';
+}
+
+// ══════════════════════════════════════════════════════
+// ONBOARDING
+// ══════════════════════════════════════════════════════
+let obStep=0;
+function renderOb() {
+  const s=OB[obStep];
+  document.getElementById('obc').innerHTML=`<div style="text-align:center;animation:fadeUp .35s ease"><div class="obi">${s.ic}</div><div class="obt">${s.t}</div><div class="obd">${s.d}</div></div>`;
+  document.getElementById('obds').innerHTML=OB.map((_,i)=>`<div class="obdot ${i===obStep?'act':''}"></div>`).join('');
+  document.getElementById('obnx').textContent=obStep<OB.length-1?'Далее →':'Начать 🚀';
+}
+document.getElementById('obnx').onclick=()=>{ if(obStep<OB.length-1){obStep++;renderOb();}else startApp(); };
+document.getElementById('obsk').onclick=startApp;
+function startApp() {
+  document.getElementById('onboard').classList.remove('vis');
+  showApp();
+}
+function showApp() {
+  document.getElementById('hdr').style.display='flex';
+  document.getElementById('tabs').style.display='flex';
+  document.getElementById('dist-bar').style.display='flex';
+  document.getElementById('main').style.display='block';
+  renderFilters();
+  renderFeed();
+  updateFavBadge();
+  // Firebase inits via window.onload below
+}
+
+// Splash → onboard
+setTimeout(()=>{
+  document.getElementById('splash').classList.add('hide');
+  setTimeout(()=>{ document.getElementById('onboard').classList.add('vis'); renderOb(); }, 480);
+}, 2000);
+
+// ══════════════════════════════════════════════════════
+// HEADER SEARCH (unified)
+// ══════════════════════════════════════════════════════
+const hdrInput = document.getElementById('hdr-sinp');
+hdrInput.addEventListener('input', e => {
+  S.search = e.target.value.trim();
+  document.getElementById('hdr-clr').style.display = S.search ? 'block' : 'none';
+  // Always go to search panel when typing (show all if empty, filter if has query)
+  setTab('search', false);
+  renderGS();
+});
+function clearHdrSearch() {
+  hdrInput.value = ''; S.search = '';
+  document.getElementById('hdr-clr').style.display='none';
+  if (S.tab === 'search') {
+    renderGS(); // show all venues sorted by rating
+  } else {
+    setTab('feed', false);
+  }
+  hdrInput.focus();
+}
+
+// ══════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════
+function setTab(name, clearSearch=true) {
+  if (clearSearch && S.search) { hdrInput.value=''; S.search=''; document.getElementById('hdr-clr').style.display='none'; }
+  S.tab = name;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('act', b.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('act'));
+  document.getElementById('panel-'+name)?.classList.add('act');
+  document.getElementById('dist-bar').style.display = name==='feed'?'flex':'none';
+  if (name==='top') renderLB(S.fbScores);
+  if (name==='saved') renderFavs();
+  if (name==='profile') renderProfile();
+  if (name==='random') drawWheel();
+  if (name==='search') {
+    renderGS();
+    setTimeout(()=>{ document.getElementById('hdr-sinp')?.focus(); }, 200);
+  }
+}
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>setTab(btn.dataset.tab));
+});
+
+// ══════════════════════════════════════════════════════
+// FILTERS
+// ══════════════════════════════════════════════════════
+function renderFilters() {
+  document.getElementById('dist-bar').innerHTML=DISTS.map(d=>`<button class="dbtn ${d===S.dist?'act':''}" onclick="setDist('${d}')">${d}</button>`).join('');
+  document.getElementById('cat-row').innerHTML=CATS.map(c=>`<button class="cbtn ${c===S.cat?'act':''}" onclick="setCat('${c}')">${c}</button>`).join('');
+}
+function setDist(d){S.dist=d;renderFilters();renderFeed();}
+function setCat(c){S.cat=c;renderFilters();renderFeed();}
+
+// ══════════════════════════════════════════════════════
+// FEED
+// ══════════════════════════════════════════════════════
+function getFiltered() {
+  return S.queue.filter(id=>{
+    const v=VENUES.find(x=>x.id===id); if(!v)return false;
+    if(S.dist!=='Все'&&v.dist!==S.dist)return false;
+    if(S.cat!=='Все'&&v.cat!==S.cat)return false;
+    return true;
+  });
+}
+function renderFeed() {
+  const fl=getFiltered(), cur=VENUES.find(v=>v.id===fl[0]), nxt=VENUES.find(v=>v.id===fl[1]);
+  const el=document.getElementById('feed-content');
+  if (!cur) {
+    el.innerHTML=`<div class="done">
+      <div style="font-size:48px;margin-bottom:12px">🎉</div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;margin-bottom:6px">Всё просмотрено!</div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:20px">Ты оценил все заведения${S.cat!=='Все'?' в «'+S.cat+'»':''}${S.dist!=='Все'?' · '+S.dist:''}</div>
+      <button onclick="resetQ()" style="background:linear-gradient(135deg,var(--g),var(--g2));border:none;color:#000;font-weight:700;font-family:'DM Sans',sans-serif;font-size:13px;padding:12px 28px;border-radius:40px;cursor:pointer">Смотреть снова</button>
+    </div>`;
+    return;
+  }
+  el.innerHTML=`
+  <div id="card-area">
+    ${nxt?`<div class="card-behind" style="background:#111;opacity:.6"><div class="card-photo"></div></div>`:''}
+    <div class="card-front" id="cf">
+      <div class="sind like" id="il">ЛАЙК ❤️</div>
+      <div class="sind nope" id="in">МИМО 👎</div>
+      <div class="card-photo" style="background-image:${venuePhotoCSS(cur)};background-color:#111"></div>
+      <div class="card-grad"></div>
+      <div class="card-cat">${cur.cat}</div>
+      <div class="card-dist">${cur.dist}</div>
+      <button class="card-ib" onclick="openDetail(${cur.id})">ℹ️</button>
+      <div class="card-content">
+        <div class="card-name">${cur.n}</div>
+        <div class="card-addr" style="color:${cur.ac}">${cur.p} · 📍 ${cur.addr}</div>
+        <div class="card-desc">${cur.desc}</div>
+        <div>${cur.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        <div class="card-meta"><span>👍 ${(S.fbScores?.[cur.id]?.likes||0)}</span><span>🔖 ${(S.fbScores?.[cur.id]?.saves||0)}</span><span>🕐 ${cur.h}</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="arow">
+    <button class="ab dl" onclick="doSwipe('left')">👎</button>
+    <button class="ab un" onclick="undoSwipe()">↩️</button>
+    <button class="ab fv" onclick="doSwipe('right',true)">❤️</button>
+    <button class="ab i2" onclick="openDetail(${cur.id})">ℹ️</button>
+    <button class="ab lk" onclick="doSwipe('right')">👍</button>
+  </div>
+  <div class="swipe-hint">← свайп или кнопки →</div>`;
+  bindDrag();
+}
+
+// ══════════════════════════════════════════════════════
+// DRAG
+// ══════════════════════════════════════════════════════
+let drag={on:false,x:0,y:0,sx:0,sy:0};
+function bindDrag() {
+  const c=document.getElementById('cf'); if(!c)return;
+  const s=(x,y)=>{drag={on:true,x:0,y:0,sx:x,sy:y};};
+  const m=(x,y)=>{
+    if(!drag.on)return;
+    drag.x=x-drag.sx; drag.y=y-drag.sy;
+    c.style.transform=`translateX(${drag.x}px) translateY(${drag.y*.15}px) rotate(${drag.x*.05}deg)`;
+    c.style.transition='none';
+    document.getElementById('il')?.classList.toggle('show',drag.x>55);
+    document.getElementById('in')?.classList.toggle('show',drag.x<-55);
+  };
+  const e=()=>{
+    if(!drag.on)return; drag.on=false;
+    if(drag.x>80)doSwipe('right');
+    else if(drag.x<-80)doSwipe('left');
+    else{c.style.transform='';c.style.transition='transform .3s ease';}
+  };
+  c.addEventListener('mousedown',ev=>s(ev.clientX,ev.clientY));
+  c.addEventListener('mousemove',ev=>m(ev.clientX,ev.clientY));
+  c.addEventListener('mouseup',e); c.addEventListener('mouseleave',e);
+  c.addEventListener('touchstart',ev=>{ev.preventDefault();s(ev.touches[0].clientX,ev.touches[0].clientY);},{passive:false});
+  c.addEventListener('touchmove',ev=>{ev.preventDefault();m(ev.touches[0].clientX,ev.touches[0].clientY);},{passive:false});
+  c.addEventListener('touchend',e);
+}
+
+// ══════════════════════════════════════════════════════
+// SWIPE
+// ══════════════════════════════════════════════════════
+function doSwipe(dir, addFav=false) {
+  const fl=getFiltered(), cur=VENUES.find(v=>v.id===fl[0]); if(!cur)return;
+  tg?.HapticFeedback?.impactOccurred(addFav?'medium':'light');
+  const c=document.getElementById('cf');
+  if(c){c.style.transition='all .28s cubic-bezier(.4,0,.2,1)';c.style.transform=dir==='right'?'translateX(130%) rotate(22deg)':'translateX(-130%) rotate(-22deg)';c.style.opacity='0';}
+  if(!S.voted[cur.id]){
+    if(dir==='right')fbVote(cur.id,true,false);
+    else fbVote(cur.id,false,false);
+    S.voted[cur.id]=dir==='right'?'like':'dislike';
+  } else { toast('Ты уже оценивал это место'); }
+  if(addFav){
+    if(!S.favs.find(f=>f.id===cur.id)){
+      S.favs.push(cur); updateFavBadge(); toast('❤️ Добавлено в избранное!');
+      fbVote(cur.id,true,true);
+    } else toast('Уже в избранном');
+  }
+  setTimeout(()=>{
+    S.skipped.push(cur.id); S.queue=S.queue.filter(id=>id!==cur.id);
+    saveAll(); renderFeed();
+  },260);
+}
+function undoSwipe() {
+  if(!S.skipped.length){toast('Нечего отменять');return;}
+  const last=S.skipped.pop(); S.queue.unshift(last);
+  saveAll(); renderFeed(); toast('↩️ Отменено');
+}
+function resetQ() {
+  S.queue=VENUES.map(v=>v.id); S.skipped=[];
+  saveAll(); renderFeed();
+}
+
+// ══════════════════════════════════════════════════════
+// DETAIL SHEET with photo gallery
+// ══════════════════════════════════════════════════════
+function openDetail(id) {
+  const v=VENUES.find(x=>x.id===id); if(!v)return;
+  const allPhotos=[v.photo,...(v.gallery||[])];
+  const ph=v.ph?.replace(/[^+\d]/g,'')||'';
+  const sc=S.fbScores?.[v.id]||{likes:0,saves:0};
+  document.getElementById('det-sh').innerHTML=`
+    <div class="det-gallery" style="position:relative">
+      <div id="det-main" class="det-main-photo" data-bg="${v.bg}" style="background:url('${allPhotos[0]}') center/cover,${v.bg}"></div>
+      <button class="sh-close" onclick="cS('det-ov')">✕</button>
+    </div>
+    ('<div class="det-gallery-strip">'
+      + '<div class="gthumb active" style="background-image:'+venuePhotoCSS(v)+';background-size:cover" onclick="this.parentNode.querySelectorAll(\'.gthumb\').forEach(g=>g.classList.remove(\'active\'));this.classList.add(\'active\')"></div>'
+      + '<div class="gthumb" style="background:'+v.bg+';display:flex;align-items:center;justify-content:center;font-size:32px" onclick="this.parentNode.querySelectorAll(\'.gthumb\').forEach(g=>g.classList.remove(\'active\'));this.classList.add(\'active\')">'+v.ic+'</div>'
+      + '<div class="gthumb" style="background:'+v.bg+';opacity:.6;display:flex;align-items:center;justify-content:center;font-size:11px;color:'+v.ac+';font-weight:600;text-align:center;padding:4px" onclick="this.parentNode.querySelectorAll(\'.gthumb\').forEach(g=>g.classList.remove(\'active\'));this.classList.add(\'active\')">'+v.cat+'</div>'
+      + '</div>')
+    <div class="sbod">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+        <div style="flex:1;margin-right:8px">
+          <div class="sname">${v.n}</div>
+          <div style="font-size:11px;color:${v.ac};margin-top:3px">${v.p} · ${v.cat} · ${v.dist} р-н</div>
+        </div>
+        <div class="srat" style="background:${v.ac}">⭐ ${v.r}</div>
+      </div>
+      <div class="sdesc">${v.desc}</div>
+      <div style="margin-bottom:12px">${v.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      <div class="mr"><div class="mi">🕐</div><div class="ml">Часы</div><div class="mv">${v.h}</div></div>
+      <div class="mr"><div class="mi">📍</div><div class="ml">Адрес</div><div class="mv">${v.addr}</div></div>
+      <div class="mr"><div class="mi">📞</div><div class="ml">Телефон</div><div class="mv"><a href="tel:${ph}" class="mvl">${v.ph||'—'}</a></div></div>
+      <div class="mr"><div class="mi">📸</div><div class="ml">Instagram</div><div class="mv"><a href="https://instagram.com/${v.ig||''}" target="_blank" class="mvl">@${v.ig||'—'}</a></div></div>
+      <div class="sstats">
+        <div class="sst"><div class="ssti">👍</div><div class="sstv">${sc.likes||0}</div><div class="sstl">лайков</div></div>
+        <div class="sst"><div class="ssti">❤️</div><div class="sstv">${sc.saves||0}</div><div class="sstl">сохранений</div></div>
+        <div class="sst"><div class="ssti">⭐</div><div class="sstv">${v.r}</div><div class="sstl">рейтинг</div></div>
+      </div>
+      <div class="sctas">
+        <button class="cm2" onclick="addFavDet(${v.id})">❤️ В избранное</button>
+        <a class="ci" href="https://yandex.ru/maps/?text=${encodeURIComponent(v.n+' Волгоград '+v.addr)}" target="_blank">🗺️</a>
+        <a class="ci" href="tel:${ph}">📞</a>
+        <button class="ci" onclick="shareV(${v.id})">📤</button>
+      </div>
+    </div>`;
+  oS('det-ov');
+}
+function setDetPhoto(el, src) {
+  const det = document.getElementById('det-main');
+  if (det) det.style.background = `url('${src}') center/cover,` + (det.dataset.bg||'#111');
+  document.querySelectorAll('.gthumb').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+}
+function addFavDet(id) {
+  const v=VENUES.find(x=>x.id===id); if(!v)return;
+  if(!S.favs.find(f=>f.id===id)){
+    S.favs.push(v); updateFavBadge(); saveAll();
+    fbVote(id,true,true); toast('❤️ Добавлено в избранное!');
+  } else toast('Уже в избранном');
+  cS('det-ov');
+}
+function shareV(id) {
+  const v=VENUES.find(x=>x.id===id); if(!v)return;
+  const txt=`${v.n}\n📍 ${v.addr}, Волгоград\n⭐ ${v.r} · ${v.p}\nОткрой в Своё Место 🏛️`;
+  if(tg?.switchInlineQuery)tg.switchInlineQuery(txt);
+  else if(navigator.share)navigator.share({title:v.n,text:txt});
+  else{navigator.clipboard?.writeText(txt);toast('📤 Скопировано!');}
+}
+
+// ══════════════════════════════════════════════════════
+// LEADERBOARD (Firebase realtime)
+// ══════════════════════════════════════════════════════
+function renderLB(fbScores) {
+  document.getElementById('prow').innerHTML=['День','Неделя','Месяц'].map((p,i)=>`
+    <button class="pb ${i===S.lbPeriod?'act':''}" onclick="setLbP(${i})">${p}</button>`).join('');
+  const data=fbScores||{};
+  const scored=VENUES.map(v=>{
+    const sc=data[v.id]||{likes:0,saves:0};
+    return{...v,_sc:(sc.likes||0)+(sc.saves||0)*2,_l:sc.likes||0,_s:sc.saves||0};
+  }).filter(v=>v._sc>0).sort((a,b)=>b._sc-a._sc);
+  if(!scored.length){
+    document.getElementById('lbl').innerHTML=`<div style="text-align:center;padding:36px 0;color:var(--t3)">
+      <div style="font-size:28px;margin-bottom:10px">🏆</div>
+      <div style="font-family:'Playfair Display',serif;font-size:17px;margin-bottom:6px">Лидерборд пуст</div>
+      <div style="font-size:12px">Будь первым — свайпай заведения!</div>
+    </div>`;
+    return;
+  }
+  const md=['🥇','🥈','🥉'];
+  document.getElementById('lbl').innerHTML=scored.slice(0,10).map((v,i)=>`
+    <div class="lr" onclick="openDetail(${v.id})" style="animation:fadeUp ${.05+i*.03}s ease both">
+      ${i<3?`<div class="lrank">${md[i]}</div>`:`<div class="lnum">${i+1}</div>`}
+      <div class="lthumb" style="background-image:${venuePhotoCSS(v)};background-size:cover;background-position:center"></div>
+      <div class="li">
+        <div class="lname">${v.n}</div>
+        <div class="lmeta">${v.dist} · 👍${v._l} ❤️${v._s}</div>
+      </div>
+      <div><div class="lsv">${v._sc}</div><div class="lsl">очков</div></div>
+    </div>`).join('');
+}
+function setLbP(i){S.lbPeriod=i;renderLB(S.fbScores);}
+
+// ══════════════════════════════════════════════════════
+// FAVORITES
+// ══════════════════════════════════════════════════════
+function renderFavs() {
+  const el=document.getElementById('favl');
+  if(!S.favs.length){
+    el.innerHTML=`<div class="es"><div style="font-size:40px;margin-bottom:12px">❤️</div><div style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:6px">Пока пусто</div><div style="font-size:12px;color:#444">Нажми ❤️ в ленте чтобы сохранить место</div></div>`;
+    return;
+  }
+  el.innerHTML=S.favs.map(v=>`
+    <div class="fc" onclick="openDetail(${v.id})">
+      <div class="ft" style="background-image:${venuePhotoCSS(v)};background-size:cover;background-position:center"></div>
+      <div class="fi">
+        <div class="fn">${v.n}</div>
+        <div class="fa">${v.cat} · ${v.dist} · ${v.addr}</div>
+        <div>${v.tags.slice(0,3).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      </div>
+      <button class="fdel" onclick="event.stopPropagation();rmFav(${v.id})">✕</button>
+    </div>`).join('');
+}
+function rmFav(id){S.favs=S.favs.filter(f=>f.id!==id);updateFavBadge();saveAll();renderFavs();toast('Удалено из избранного');}
+
+// ══════════════════════════════════════════════════════
+// PROFILE
+// ══════════════════════════════════════════════════════
+function renderProfile() {
+  const u=S.user;
+  const nm=u?`${u.first_name||''}${u.last_name?' '+u.last_name:''}`.trim():'Гость';
+  const un=u?.username?`@${u.username}`:'Войди через Telegram';
+  const avH=u?.photo_url?`<img src="${u.photo_url}" alt="avatar">`:u?.first_name?.[0]||'👤';
+  document.getElementById('profile-content').innerHTML=`
+    <div class="ph">
+      <div class="pav">${typeof avH==='string'&&avH.startsWith('<img')?avH:`<span style="font-size:26px">${avH}</span>`}</div>
+      <div class="pname">${nm}</div>
+      <div class="pusr">${un}</div>
+    </div>
+    <div class="psg">
+      <div class="psc"><div class="psv">${S.skipped.length}</div><div class="psl">Оценено</div></div>
+      <div class="psc"><div class="psv">${S.favs.length}</div><div class="psl">Избранное</div></div>
+      <div class="psc"><div class="psv">${Object.keys(S.voted).length}</div><div class="psl">Голосов</div></div>
+    </div>
+    <div class="psec">
+      <div class="psec-title">МОИ ЛЮБИМЫЕ МЕСТА</div>
+      ${S.favs.length?S.favs.slice(0,3).map(v=>`
+        <div style="display:flex;gap:9px;align-items:center;padding:7px 0;border-bottom:1px solid #0d0d0d;cursor:pointer" onclick="openDetail(${v.id})">
+          <div style="width:34px;height:34px;border-radius:9px;overflow:hidden;flex-shrink:0"></div>
+          <div style="flex:1;min-width:0"><div style="font-size:13px;font-family:'Playfair Display',serif;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.n}</div>
+          <div style="font-size:10px;color:#444">${v.dist} · ${v.addr}</div></div>
+        </div>`).join('')
+        :'<div style="font-size:12px;color:#444;padding:6px 0">Сохрани первое место через ❤️</div>'}
+    </div>
+    <div class="psec">
+      <div class="psec-title">О ПРИЛОЖЕНИИ</div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.8">
+        🏛️ <b style="color:var(--tx)">Своё Место</b> — тиндер для заведений<br>
+        📍 8 районов Волгограда · ${VENUES.length} заведений<br>
+        🧪 Версия 2.0
+      </div>
+    </div>
+    <div class="wip">
+      <div style="font-size:20px;margin-bottom:6px">🏪</div>
+      <div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;margin-bottom:4px">Кабинет владельца</div>
+      <div style="font-size:10px;color:var(--g);letter-spacing:1px;margin-bottom:6px">🚧 COMING SOON</div>
+      <div style="font-size:11px;color:#555;line-height:1.6">Скоро владельцы смогут управлять профилем и видеть статистику</div>
+    </div>
+    <button class="fbbtn" onclick="oS('fb-ov')">💬 Оставить отзыв</button>
+    <div style="height:16px"></div>`;
+}
+
+// ══════════════════════════════════════════════════════
+// SEARCH (unified — results show below header)
+// ══════════════════════════════════════════════════════
+function renderGS() {
+  const q=S.search.toLowerCase();
+  let list=[...VENUES];
+  if(q){
+    list=list.filter(v=>
+      v.n.toLowerCase().includes(q)||
+      v.addr.toLowerCase().includes(q)||
+      v.dist.toLowerCase().includes(q)||
+      v.cat.toLowerCase().includes(q)||
+      v.tags.some(t=>t.toLowerCase().includes(q))
+    );
+    document.getElementById('gs-info').textContent=list.length?`НАЙДЕНО: ${list.length}`:'НИЧЕГО НЕ НАЙДЕНО';
+  } else {
+    document.getElementById('gs-info').textContent=`ВСЕ ЗАВЕДЕНИЯ (${list.length}) · ПО РЕЙТИНГУ`;
+  }
+  list.sort((a,b)=>{
+    const sa=(S.fbScores?.[a.id]?.likes||0)+(S.fbScores?.[a.id]?.saves||0)*2;
+    const sb=(S.fbScores?.[b.id]?.likes||0)+(S.fbScores?.[b.id]?.saves||0)*2;
+    return sb-sa||b.r-a.r;
+  });
+  function hl(t){
+    if(!q||!t)return t;
+    try{return String(t).replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark class="hl">$1</mark>');}
+    catch{return t;}
+  }
+  const mv=S.voted;
+  document.getElementById('gs-list').innerHTML=list.map((v,i)=>{
+    const vb=mv[v.id]?`<span style="font-size:9px;padding:1px 5px;border-radius:8px;margin-left:5px;background:${mv[v.id]==='like'?'rgba(34,197,94,.15)':'rgba(239,68,68,.15)'};color:${mv[v.id]==='like'?'#22c55e':'#ef4444'}">${mv[v.id]==='like'?'👍':'👎'}</span>`:'';
+    return `<div class="gs-item" onclick="openDetail(${v.id})" style="animation:fadeUp ${.05+i*.02}s ease both">
+      <div class="gs-thumb" style="background-image:${venuePhotoCSS(v)};background-size:cover;background-position:center"></div>
+      <div class="gs-info">
+        <div class="gs-name">${hl(v.n)}${vb}</div>
+        <div class="gs-sub">${hl(v.cat)} · ${hl(v.dist)} · ${hl(v.addr)}</div>
+        <div style="margin-top:3px">${v.tags.slice(0,3).map(t=>`<span class="tag" style="font-size:8px;padding:1px 6px">${t}</span>`).join('')}</div>
+      </div>
+      <div class="gs-right"><div class="gs-r">⭐ ${v.r}</div><div class="gs-c">${v.p}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// SPIN WHEEL
+// ══════════════════════════════════════════════════════
+let spinResult=null, isSpinning=false, spinAngle=0;
+function drawWheel() {
+  const c=document.getElementById('spin-canvas'); if(!c)return;
+  const ctx=c.getContext('2d'), cx=120,cy=120,r=116, items=VENUES.slice(0,12), arc=(Math.PI*2)/items.length;
+  const bgs=['#1a0e00','#0a1628','#0d0500','#050010','#021000','#060300','#080514','#0a0a00','#150800','#001520','#0a0500','#120000'];
+  ctx.clearRect(0,0,240,240);
+  items.forEach((v,i)=>{
+    const st=arc*i-Math.PI/2+spinAngle*(Math.PI/180), en=st+arc;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,st,en);ctx.closePath();
+    ctx.fillStyle=bgs[i%bgs.length];ctx.fill();
+    ctx.strokeStyle='rgba(212,168,98,.3)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(st+arc/2);
+    ctx.font='18px serif';ctx.textAlign='center';ctx.fillText(v.ic,r*.65,6);ctx.restore();
+  });
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='#d4a862';ctx.lineWidth=2.5;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,22,0,Math.PI*2);ctx.fillStyle='#06060e';ctx.fill();ctx.strokeStyle='#d4a862';ctx.lineWidth=2.5;ctx.stroke();
+}
+function doSpin() {
+  if(isSpinning)return; isSpinning=true;
+  const btn=document.getElementById('spin-btn'); if(btn){btn.disabled=true;btn.textContent='⏳ Крутится...';}
+  document.getElementById('spin-result').style.display='none';
+  tg?.HapticFeedback?.impactOccurred('medium');
+  const chosen=VENUES[Math.floor(Math.random()*VENUES.length)]; spinResult=chosen;
+  const total=(5+Math.floor(Math.random()*3))*360+Math.random()*360;
+  const start=spinAngle, end=start+total, dur=3500, t0=performance.now(); let lastSeg=-1;
+  function easeOut(t){return 1-Math.pow(1-t,3);}
+  function frame(now){
+    const t=Math.min((now-t0)/dur,1); spinAngle=start+(end-start)*easeOut(t);
+    const seg=Math.floor((spinAngle%360)/(360/12));
+    if(seg!==lastSeg){tg?.HapticFeedback?.selectionChanged?.();lastSeg=seg;}
+    drawWheel();
+    if(t<1)requestAnimationFrame(frame);
+    else{
+      spinAngle=end%360; isSpinning=false;
+      tg?.HapticFeedback?.notificationOccurred('success');
+      if(btn){btn.disabled=false;btn.textContent='🎰 Крутить!';}
+      showSpinResult(chosen);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+function showSpinResult(v) {
+  document.getElementById('spin-card').innerHTML=`
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+      <div style="width:50px;height:50px;border-radius:12px;flex-shrink:0;background-image:${venuePhotoCSS(v)};background-size:cover;background-position:center"></div>
+      <div style="flex:1"><div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900">${v.n}</div>
+      <div style="font-size:11px;color:${v.ac};margin-top:2px">${v.cat} · ${v.p}</div></div>
+      <div style="background:${v.ac};color:#000;font-weight:700;font-size:12px;padding:3px 8px;border-radius:14px;flex-shrink:0">⭐ ${v.r}</div>
+    </div>
+    <div style="font-size:11px;color:var(--t2);line-height:1.55;margin-bottom:8px">${v.desc}</div>
+    <div>${v.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+    <div style="font-size:10px;color:#444;margin-top:8px">📍 ${v.addr} · 🕐 ${v.h}</div>
+    <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--g)">Нажми для подробностей →</div>`;
+  document.getElementById('spin-result').style.display='block';
+}
+function openDetailFromSpin(){if(spinResult)openDetail(spinResult.id);}
+setTimeout(drawWheel,300);
+
+// ══════════════════════════════════════════════════════
+// FEEDBACK
+// ══════════════════════════════════════════════════════
+function sendFB() {
+  const txt=document.getElementById('fbt').value.trim(); if(!txt){toast('Напиши что-нибудь 😊');return;}
+  const u=S.user, from=u?`@${u.username||u.first_name||'аноним'}`:'аноним';
+  if(tg?.sendData)tg.sendData(JSON.stringify({type:'feedback',from,text:txt,ts:Date.now()}));
+  else{navigator.clipboard?.writeText(`[Отзыв от ${from}]: ${txt}`);}
+  toast('📨 Отправлено! Спасибо'); cS('fb-ov'); document.getElementById('fbt').value='';
+}
+
+// ── Firebase init after all scripts loaded ──
+
+// ══════════════════════════════════════════════════════
+// ДОСТИЖЕНИЯ
+// ══════════════════════════════════════════════════════
+
+function getAchStats(){
+  const vk=Object.keys(S.voted);
+  const cv=vk.filter(id=>{const v=VENUES.find(x=>x.id==id);return v&&v.dist==='Центральный';});
+  const ds=new Set(vk.map(id=>{const v=VENUES.find(x=>x.id==id);return v?v.dist:null;}).filter(Boolean));
+  const rv=Object.values(S.localReviews||{}).reduce((s,a)=>s+(a?.length||0),0);
+  return{voted:vk.length,favs:S.favs.length,reviews:rv,central:cv.length,dists:ds.size};
+}
+function checkAchievements(){
+  const st=getAchStats(); let nu=[];
+  ACHIEVEMENTS.forEach(a=>{if(!S.achievements[a.id]&&a.req(st)){S.achievements[a.id]=Date.now();nu.push(a);}});
+  if(nu.length){saveAll();nu.forEach((a,i)=>setTimeout(()=>toast(a.icon+' Достижение: «'+a.name+'»!'),i*1500));}
+}
+function renderAch(){
+  const st=getAchStats();
+  const el=document.getElementById('ach-content');if(!el)return;
+  const statItems=[['🃏',st.voted,'Оценено'],['❤️',st.favs,'Избранное'],['💬',st.reviews,'Отзывов'],['🏅',Object.keys(S.achievements||{}).length,'Достижений']];
+  let statsHtml='';
+  statItems.forEach(function(x){
+    statsHtml+='<div style="text-align:center"><div style="font-size:20px;margin-bottom:3px">'+x[0]+'</div><div style="font-family:\'Playfair Display\',serif;font-size:18px;font-weight:700;color:var(--g)">'+x[1]+'</div><div style="font-size:9px;color:#555">'+x[2]+'</div></div>';
+  });
+  let achHtml='';
+  ACHIEVEMENTS.forEach(function(a){
+    const ul=!!(S.achievements||{})[a.id];
+    const pr=a.prog(st),pct=Math.round((pr/a.max)*100);
+    achHtml+='<div style="background:var(--b2);border-radius:14px;padding:14px 12px;border:1.5px solid '+(ul?'var(--g)':'var(--b3)')+';text-align:center;position:relative;opacity:'+(ul?1:.6)+'">'
+      +(ul?'<div style="position:absolute;top:8px;right:8px;font-size:11px">✅</div>':'')
+      +'<div style="font-size:28px;margin-bottom:6px">'+a.icon+'</div>'
+      +'<div style="font-family:\'Playfair Display\',serif;font-size:12px;font-weight:700;margin-bottom:3px">'+a.name+'</div>'
+      +'<div style="font-size:9px;color:var(--t3);line-height:1.4;margin-bottom:6px">'+a.desc+'</div>'
+      +'<div style="height:3px;background:#222;border-radius:2px;overflow:hidden;margin-bottom:4px"><div style="height:100%;background:var(--g);border-radius:2px;width:'+pct+'%;transition:width .5s"></div></div>'
+      +'<div style="font-size:9px;color:'+(ul?'var(--g)':'#444')+'">'+(ul?'Получено!':pr+'/'+a.max)+'</div>'
+      +'</div>';
+  });
+  el.innerHTML='<div style="background:var(--b2);border-radius:13px;padding:14px;margin-bottom:14px;border:1px solid var(--b3)">'
+    +'<div style="font-size:9px;color:#333;letter-spacing:1.5px;margin-bottom:10px">ТВОЯ СТАТИСТИКА</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+statsHtml+'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+achHtml+'</div>';
+}
+// ══════════════════════════════════════════════════════
+// ОТЗЫВЫ
+// ══════════════════════════════════════════════════════
+let currentRevVenueId = null;
+let currentStars = 0;
+
+function openReviewForm(venueId) {
+  currentRevVenueId = venueId;
+  currentStars = 0;
+  const v = VENUES.find(x=>x.id===venueId);
+  // Show review form in a toast-style overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'rev-overlay-dyn';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.8);display:flex;align-items:flex-end';
+  overlay.innerHTML = `
+    <div style="background:#0c0c1a;border-radius:20px 20px 0 0;width:100%;padding:18px 18px 36px;border:1px solid var(--bd);border-bottom:none;animation:slideUp .3s ease">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900">${v?v.n:'Отзыв'}</div>
+        <button onclick="document.getElementById('rev-overlay-dyn')?.remove()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;font-size:13px;cursor:pointer">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:10px">Твоя оценка:</div>
+      <div id="dyn-stars" style="display:flex;gap:6px;margin-bottom:12px">
+        ${[1,2,3,4,5].map(n=>`<span data-v="${n}" onclick="setRevStar(${n})" style="font-size:28px;cursor:pointer;opacity:.3;transition:opacity .15s">⭐</span>`).join('')}
+      </div>
+      <textarea id="dyn-rev-txt" placeholder="Расскажи о своём опыте..." style="width:100%;min-height:80px;background:var(--b2);border:1.5px solid var(--bd);border-radius:11px;padding:10px;color:#fff;font-size:12px;resize:none;outline:none;font-family:'DM Sans',sans-serif;transition:border-color .2s" onfocus="this.style.borderColor='var(--g)'" onblur="this.style.borderColor='var(--bd)'"></textarea>
+      <button onclick="submitDynReview()" style="width:100%;margin-top:10px;padding:13px;border-radius:12px;background:linear-gradient(135deg,var(--g),var(--g2));border:none;color:#000;font-weight:700;font-size:13px;cursor:pointer">Опубликовать ✓</button>
+    </div>`;
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+function setRevStar(n) {
+  currentStars = n;
+  document.querySelectorAll('#dyn-stars span').forEach((s,i)=>{ s.style.opacity=i<n?'1':'.3'; });
+}
+
+function submitDynReview() {
+  const txt = document.getElementById('dyn-rev-txt')?.value.trim();
+  if (!txt) { toast('Напиши отзыв 😊'); return; }
+  if (!currentStars) { toast('Поставь оценку ⭐'); return; }
+  const u = S.user;
+  const rev = {
+    name: u ? (`${u.first_name||''}${u.last_name?' '+u.last_name:''}`).trim()||'Аноним' : 'Аноним',
+    text: txt, rating: currentStars, ts: Date.now(), uid: u?.id||'guest'
+  };
+  if (fbDb) fbDb.ref('/reviews/'+currentRevVenueId).push(rev);
+  if (!S.localReviews) S.localReviews = {};
+  if (!S.localReviews[currentRevVenueId]) S.localReviews[currentRevVenueId] = [];
+  S.localReviews[currentRevVenueId].unshift(rev);
+  saveAll();
+  checkAchievements();
+  document.getElementById('rev-overlay-dyn')?.remove();
+  toast('✅ Отзыв опубликован!');
+  setTimeout(()=>openDetail(currentRevVenueId), 300);
+}
+
+function renderReviews(venueId) {
+  const fbRevs = Object.values(S.fbReviews?.[venueId] || {});
+  const locRevs = S.localReviews?.[venueId] || [];
+  const seen = new Set();
+  const all = [...fbRevs, ...locRevs].filter(r=>{
+    const key = r.uid+'|'+r.ts;
+    if(seen.has(key)) return false;
+    seen.add(key); return true;
+  }).sort((a,b)=>b.ts-a.ts).slice(0,15);
+  const stars = n => Array(5).fill(0).map((_,i)=>i<n?'⭐':'☆').join('');
+  const ago = ts=>{const d=Date.now()-ts;if(d<60000)return'только что';if(d<3600000)return Math.floor(d/60000)+'мин';if(d<86400000)return Math.floor(d/3600000)+'ч';return Math.floor(d/86400000)+'д';};
+  return `
+    <div style="margin-top:4px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600">Отзывы ${all.length>0?'('+all.length+')':''}</div>
+        <div style="font-size:11px;color:var(--g);cursor:pointer;font-weight:600" onclick="openReviewForm(${venueId})">+ Написать</div>
+      </div>
+      <div onclick="openReviewForm(${venueId})" style="background:var(--b2);border:1px solid var(--bd);border-radius:11px;padding:10px 12px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:8px">
+        <span style="font-size:18px">✍️</span>
+        <span style="font-size:12px;color:var(--t3);flex:1">Поделись впечатлениями...</span>
+        <span style="font-size:11px">⭐⭐⭐⭐⭐</span>
+      </div>
+      ${all.length===0?'<div style="font-size:12px;color:#444;text-align:center;padding:12px 0">Будь первым кто оставит отзыв!</div>'
+      :all.map(r=>`
+        <div style="padding:10px 0;border-bottom:1px solid #0d0d0d">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+            <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--g2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;flex-shrink:0">${(r.name||'?')[0].toUpperCase()}</div>
+            <div style="font-size:12px;font-weight:600;flex:1">${r.name||'Аноним'}</div>
+            <div style="font-size:10px">${stars(r.rating||5)}</div>
+            <div style="font-size:9px;color:#444">${ago(r.ts)}</div>
+          </div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.5">${r.text}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+
+// ══════════════════════════════════════════════════════
+// ГЕОЛОКАЦИЯ
+// ══════════════════════════════════════════════════════
+function findNearby() {
+  if (!navigator.geolocation) { toast('Геолокация недоступна в этом браузере'); return; }
+  toast('📍 Определяю местоположение...');
+  navigator.geolocation.getCurrentPosition(pos => {
+    const {latitude: lat, longitude: lon} = pos.coords;
+    const sorted = VENUES.map(v => {
+      const dlat = (v.lat||48.7)-lat, dlon = (v.lon||44.5)-lon;
+      const dist = Math.sqrt(dlat*dlat + dlon*dlon) * 111;
+      return {...v, _dist: dist};
+    }).sort((a,b) => a._dist - b._dist).slice(0, 10);
+
+    // Show in overlay
+    const ov = document.createElement('div');
+    ov.id = 'geo-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.8);display:flex;align-items:flex-end';
+    ov.innerHTML = `<div style="background:#0c0c1a;border-radius:20px 20px 0 0;width:100%;max-height:85vh;overflow-y:auto;border:1px solid var(--bd);border-bottom:none;animation:slideUp .3s ease">
+      <div style="padding:16px 16px 8px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#0c0c1a;z-index:5">
+        <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900">Рядом со мной</div>
+        <button onclick="document.getElementById('geo-overlay')?.remove()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;font-size:13px;cursor:pointer">✕</button>
+      </div>
+      <div style="padding:0 16px 32px">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:12px">10 ближайших заведений от тебя</div>
+        ${sorted.map(v=>`
+          <div onclick="document.getElementById('geo-overlay')?.remove();openDetail(${v.id})" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #0d0d0d;cursor:pointer">
+            <div style="width:44px;height:44px;border-radius:11px;flex-shrink:0;background:${v.bg};display:flex;align-items:center;justify-content:center;font-size:22px">${v.ic}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.n}</div>
+              <div style="font-size:10px;color:#555">${v.cat} · ${v.addr}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:13px;font-weight:700;color:var(--g)">${v._dist<1?(v._dist*1000).toFixed(0)+'м':v._dist.toFixed(1)+'км'}</div>
+              <div style="font-size:9px;color:#444">от вас</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+    ov.addEventListener('click', e=>{ if(e.target===ov) ov.remove(); });
+    document.body.appendChild(ov);
+  }, err => {
+    const msgs = {1:'Доступ к геолокации запрещён', 2:'Не удалось получить координаты', 3:'Время ожидания истекло'};
+    toast(msgs[err.code]||'Ошибка геолокации');
+  }, {timeout:10000, enableHighAccuracy:false});
+}
+
+
+// ══════════════════════════════════════════════════════
+// КАРТА
+// ══════════════════════════════════════════════════════
+const DISTS_MAP = ["Все","Центральный","Ворошиловский","Дзержинский","Краснооктябрьский","Красноармейский","Советский","Тракторозаводский","Кировский"];
+let mapDistFilter = "Все";
+
+function renderMap() {
+  const ctrl = document.getElementById('map-dist-ctrl');
+  if (ctrl) {
+    ctrl.innerHTML = DISTS_MAP.map(d=>
+      `<button onclick="setMapDist('${d}')" style="border:none;cursor:pointer;border-radius:14px;padding:4px 11px;font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0;${d===mapDistFilter?'background:var(--g);color:#000':'background:var(--b2);color:var(--t3);border:1px solid #111'}">${d}</button>`
+    ).join('');
+  }
+  updateMapFrame();
+}
+
+function setMapDist(d) { mapDistFilter = d; renderMap(); }
+
+function updateMapFrame() {
+  const venues = mapDistFilter==='Все' ? VENUES : VENUES.filter(v=>v.dist===mapDistFilter);
+  const q = mapDistFilter==='Все' ? 'кафе рестораны Волгоград центр' : `кафе рестораны ${mapDistFilter} Волгоград`;
+  const url = `https://yandex.ru/maps/38/volgograd/?text=${encodeURIComponent(q)}&z=${mapDistFilter==='Все'?12:13}&l=map`;
+  const frame = document.getElementById('map-frame');
+  if (frame && frame.src !== url) frame.src = url;
+}
+
+
+// ══════════════════════════════════════════════════════
+// ACHIEVEMENTS — система достижений
+// ══════════════════════════════════════════════════════
+const ACHIEVEMENTS = [
+  {id:'first',   icon:'🌟', name:'Первый шаг',    desc:'Оценил первое заведение',          check: s => Object.keys(s.voted||{}).length >= 1},
+  {id:'explorer',icon:'🗺️', name:'Исследователь', desc:'Оценил 10 заведений',              check: s => Object.keys(s.voted||{}).length >= 10},
+  {id:'critic',  icon:'🎯', name:'Критик',         desc:'Оценил 25 заведений',              check: s => Object.keys(s.voted||{}).length >= 25},
+  {id:'master',  icon:'👑', name:'Мастер вкуса',   desc:'Оценил 50 заведений',              check: s => Object.keys(s.voted||{}).length >= 50},
+  {id:'collector',icon:'❤️','name':'Коллекционер', desc:'Добавил 5 мест в избранное',       check: s => (s.favs||[]).length >= 5},
+  {id:'romantic', icon:'🌹','name':'Романтик',      desc:'10 заведений в избранном',         check: s => (s.favs||[]).length >= 10},
+  {id:'local',   icon:'📍', name:'Местный',         desc:'Оценил заведения 3 разных районов',check: s => {
+    const dists = new Set(Object.keys(s.voted||{}).map(id=>VENUES.find(v=>v.id==id)?.dist).filter(Boolean));
+    return dists.size >= 3;
+  }},
+  {id:'foodie',  icon:'🍽️', name:'Гурман',         desc:'Оценил рестораны всех категорий', check: s => {
+    const cats = new Set(Object.keys(s.voted||{}).map(id=>VENUES.find(v=>v.id==id)?.cat).filter(Boolean));
+    return ['Ресторан','Кафе','Бар','Кофейня'].every(c=>cats.has(c));
+  }},
+  {id:'reviewer',icon:'✍️', name:'Рецензент',       desc:'Оставил первый отзыв',             check: s => Object.keys(s.reviews||{}).length >= 1},
+  {id:'generous',icon:'⭐', name:'Щедрый',          desc:'Поставил 10 пятёрок',              check: s => {
+    return Object.values(s.reviews||{}).flat().filter(r=>r.rating===5).length >= 10;
+  }},
+];
+
+function checkAchievements() {
+  const newlyEarned = [];
+  const earned = S.earnedAch || {};
+  ACHIEVEMENTS.forEach(a => {
+    if (!earned[a.id] && a.check(S)) {
+      earned[a.id] = Date.now();
+      newlyEarned.push(a);
+    }
+  });
+  S.earnedAch = earned;
+  if (newlyEarned.length) {
+    saveAll();
+    newlyEarned.forEach((a,i) => {
+      setTimeout(() => toast(`🏅 Достижение: ${a.name}!`), i * 1500);
+    });
+  }
+}
+
+function renderAchievements() {
+  const earned = S.earnedAch || {};
+  return `
+    <div class="psec">
+      <div class="psec-title">ДОСТИЖЕНИЯ (${Object.keys(earned).length}/${ACHIEVEMENTS.length})</div>
+      <div class="ach-grid">
+        ${ACHIEVEMENTS.map(a => `
+          <div class="ach-item ${earned[a.id]?'earned':'locked'}" title="${a.desc}">
+            <div class="ach-icon">${a.icon}</div>
+            <div class="ach-name">${a.name}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+// REVIEWS — отзывы и комментарии
+// ══════════════════════════════════════════════════════
+let pickedStars = 0;
+
+function renderReviews(venueId) {
+  const revs = (S.reviews && S.reviews[venueId]) || [];
+  const fbRevs = S.fbReviews && S.fbReviews[venueId] ? S.fbReviews[venueId] : [];
+  const allRevs = [...fbRevs, ...revs].sort((a,b) => b.ts - a.ts).slice(0, 20);
+  const u = S.user;
+  const uName = u ? (u.first_name || u.username || 'Гость') : 'Гость';
+  const uInitial = uName[0]?.toUpperCase() || '?';
+  const alreadyReviewed = allRevs.some(r => r.uid && r.uid === String(u?.id || 'guest'));
+
+  return `
+    <div style="margin-top:14px">
+      <div style="font-size:11px;color:#333;letter-spacing:1.5px;margin-bottom:10px">ОТЗЫВЫ (${allRevs.length})</div>
+      ${allRevs.length ? allRevs.map(r => `
+        <div class="rev-item">
+          <div class="rev-header">
+            <div class="rev-av">${(r.name||'?')[0].toUpperCase()}</div>
+            <div class="rev-name">${r.name||'Аноним'}</div>
+            <div class="rev-date">${new Date(r.ts||0).toLocaleDateString('ru-RU',{day:'numeric',month:'short'})}</div>
+          </div>
+          <div class="rev-stars">${'⭐'.repeat(r.rating||5)}${'☆'.repeat(5-(r.rating||5))}</div>
+          <div class="rev-text">${r.text}</div>
+        </div>`).join('')
+      : '<div style="font-size:12px;color:#444;padding:8px 0">Пока нет отзывов — будь первым!</div>'}
+      ${!alreadyReviewed ? `
+      <div class="rev-form">
+        <div style="font-size:12px;font-weight:600;margin-bottom:8px">Оставить отзыв</div>
+        <div class="rev-stars-pick" id="stars-pick-${venueId}" onclick="pickStars(this,event,${venueId})">
+          <span>☆</span><span>☆</span><span>☆</span><span>☆</span><span>☆</span>
+        </div>
+        <textarea class="rev-ta" id="rev-ta-${venueId}" placeholder="Расскажи о своём визите..." maxlength="300"></textarea>
+        <button class="rev-submit" onclick="submitReview(${venueId})">Отправить отзыв</button>
+      </div>` : '<div style="font-size:11px;color:#444;margin-top:10px;text-align:center">Ты уже оставил отзыв ✓</div>'}
+    </div>`;
+}
+
+function pickStars(el, event, venueId) {
+  const spans = el.querySelectorAll('span');
+  const rect = el.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const w = rect.width / 5;
+  const n = Math.min(5, Math.max(1, Math.ceil(x / w)));
+  pickedStars = n;
+  spans.forEach((s, i) => s.textContent = i < n ? '⭐' : '☆');
+  tg?.HapticFeedback?.selectionChanged?.();
+}
+
+function submitReview(venueId) {
+  const ta = document.getElementById('rev-ta-' + venueId);
+  if (!ta) return;
+  const text = ta.value.trim();
+  if (!text) { toast('Напиши что-нибудь о заведении'); return; }
+  if (!pickedStars) { toast('Поставь оценку ⭐'); return; }
+  const u = S.user;
+  const review = {
+    uid: String(u?.id || 'guest'),
+    name: u ? (u.first_name || u.username || 'Гость') : 'Гость',
+    rating: pickedStars,
+    text,
+    ts: Date.now()
+  };
+  // Save locally
+  if (!S.reviews) S.reviews = {};
+  if (!S.reviews[venueId]) S.reviews[venueId] = [];
+  S.reviews[venueId].unshift(review);
+  // Save to Firebase
+  if (fbDb) {
+    fbDb.ref('/reviews/' + venueId).push(review);
+  }
+  saveAll();
+  checkAchievements();
+  toast('✍️ Отзыв добавлен! Спасибо');
+  pickedStars = 0;
+  // Refresh detail sheet
+  openDetail(venueId);
+}
+
+// Load Firebase reviews
+function listenReviews() {
+  if (!fbDb) return;
+  fbDb.ref('/reviews').on('value', snap => {
+    S.fbReviews = snap.val() || {};
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// GEOLOCATION
+// ══════════════════════════════════════════════════════
+let userLat = null, userLon = null;
+
+function findNearby() {
+  if (!navigator.geolocation) { toast('Геолокация недоступна'); return; }
+  toast('📍 Определяем местоположение...');
+  tg?.HapticFeedback?.impactOccurred('medium');
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      userLat = pos.coords.latitude;
+      userLon = pos.coords.longitude;
+      const nearby = getNearbyVenues(userLat, userLon, 5);
+      toast(`📍 Найдено ${nearby.length} мест рядом`);
+      // Switch to map with user location
+      setTab('map');
+      renderMap(userLat, userLon);
+    },
+    err => {
+      if (err.code === 1) toast('Разреши доступ к геолокации');
+      else toast('Не удалось определить местоположение');
+    },
+    { timeout: 8000, maximumAge: 60000 }
+  );
+}
+
+function getNearbyVenues(lat, lon, radiusKm) {
+  return VENUES.filter(v => {
+    if (!v.lat || !v.lon) return false;
+    const d = getDistance(lat, lon, v.lat, v.lon);
+    v._dist = d;
+    return d <= radiusKm;
+  }).sort((a,b) => a._dist - b._dist);
+}
+
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Show geo button only on feed tab
+function updateGeoBtn() {
+  const btn = document.getElementById('geo-btn');
+  if (btn) btn.classList.toggle('vis', S.tab === 'feed');
+}
+
+// ══════════════════════════════════════════════════════
+// MAP
+// ══════════════════════════════════════════════════════
+let mapDist = 'Все';
+
+function renderMap(centerLat, centerLon) {
+  const frame = document.getElementById('map-frame');
+  const loading = document.getElementById('map-loading');
+  if (!frame) return;
+
+  // District filter for map
+  const distRow = document.getElementById('map-dist-row');
+  if (distRow) {
+    distRow.innerHTML = ['Все','Центральный','Ворошиловский','Дзержинский','Краснооктябрьский','Красноармейский'].map(d =>
+      `<button class="dbtn ${d===mapDist?'act':''}" onclick="setMapDist('${d}')">${d}</button>`
+    ).join('');
+  }
+
+  const venues = VENUES.filter(v => v.lat && v.lon && (mapDist==='Все' || v.dist===mapDist));
+  
+  // Build Yandex Maps URL with all venue markers
+  const center = centerLat ? `${centerLat},${centerLon}` : '48.7071,44.5170';
+  
+  // Use Yandex Maps iframe with search results
+  const searchQuery = venues.slice(0,10).map(v => encodeURIComponent(v.n)).join(',');
+  
+  // Best approach: use static Yandex Maps with markers
+  const lat = centerLat || 48.7071;
+  const lon = centerLon || 44.5170;
+  
+  // Build points string for Yandex Maps
+  const pts = venues.slice(0,20).filter(v=>v.lat&&v.lon)
+    .map((v,i) => `${v.lon},${v.lat},pm2rdm${i+1}`)
+    .join('~');
+  
+  let mapUrl;
+  if (pts) {
+    mapUrl = `https://yandex.ru/maps/?ll=${lon},${lat}&z=13&mode=routes&pt=${pts}`;
+  } else {
+    mapUrl = `https://yandex.ru/maps/10833/volgograd/?ll=${lon},${lat}&z=13&text=кафе+рестораны`;
+  }
+  
+  frame.src = mapUrl;
+  frame.onload = () => { if (loading) loading.style.display = 'none'; };
+  
+  // Show venue list below map
+  renderMapVenueList(venues, centerLat, centerLon);
+}
+
+function setMapDist(d) {
+  mapDist = d;
+  renderMap(userLat, userLon);
+}
+
+function renderMapVenueList(venues, lat, lon) {
+  const el = document.getElementById('map-venue-list');
+  if (!el) return;
+  const list = venues.slice(0, 15);
+  el.innerHTML = list.map(v => {
+    const distStr = (lat && v.lat) ? ` · ${getDistance(lat, lon, v.lat, v.lon).toFixed(1)} км` : '';
+    return `<div class="map-venue-row" onclick="openDetail(${v.id})">
+      <div class="map-vthumb" style="background-image:${venuePhotoCSS(v)};background-size:cover;background-position:center"></div>
+      <div style="flex:1;min-width:0">
+        <div class="map-vname">${v.n}</div>
+        <div class="map-vaddr">${v.dist} · ${v.addr}${distStr}</div>
+      </div>
+      <div style="font-size:12px;color:var(--g)">⭐${v.r}</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// PATCH: setTab — добавить map и обновить geo btn
+// ══════════════════════════════════════════════════════
+const _origSetTab = setTab;
+// We'll override setTab below by patching the existing one
+
+// ══════════════════════════════════════════════════════
+// PATCH: openDetail — добавить отзывы
+// ══════════════════════════════════════════════════════
+const _origOpenDetail = openDetail;
+window._openDetailWithReviews = function(id) {
+  // After rendering, append reviews section
+  const el = document.querySelector('#det-sh .sbod');
+  if (el && !el.querySelector('.rev-form') && !el.querySelector('.rev-item')) {
+    el.insertAdjacentHTML('beforeend', renderReviews(id));
+  }
+};
+
+// ══════════════════════════════════════════════════════
+// PATCH: renderProfile — добавить достижения
+// ══════════════════════════════════════════════════════
+const _origRenderProfile = renderProfile;
+function renderProfile() {
+  _origRenderProfile();
+  // Inject achievements into profile
+  const pc = document.getElementById('profile-content');
+  if (pc) {
+    const wip = pc.querySelector('.wip');
+    if (wip) wip.insertAdjacentHTML('beforebegin', renderAchievements());
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// INIT: extend existing functions
+// ══════════════════════════════════════════════════════
+// Override setTab to handle map tab and geo button
+(function() {
+  const orig = window.setTab;
+  if (!orig) return;
+  window.setTab = function(name, clearSearch) {
+    orig(name, clearSearch);
+    updateGeoBtn();
+    if (name === 'map') {
+      setTimeout(() => renderMap(userLat, userLon), 100);
+    }
+  };
+})();
+
+// Override openDetail to add reviews
+(function() {
+  const orig = window.openDetail;
+  window.openDetail = function(id) {
+    orig(id);
+    // Append reviews after sheet renders
+    setTimeout(() => {
+      const sbod = document.querySelector('#det-sh .sbod');
+      if (sbod && !sbod.querySelector('.rev-form')) {
+        sbod.insertAdjacentHTML('beforeend', renderReviews(id));
+      }
+    }, 100);
+  };
+})();
+
+// Override doSwipe to check achievements
+(function() {
+  const orig = window.doSwipe;
+  window.doSwipe = function(dir, addFav) {
+    orig(dir, addFav);
+    setTimeout(checkAchievements, 300);
+  };
+})();
+
+// Load fbReviews and init geo button visibility
+setTimeout(() => {
+  listenReviews();
+  updateGeoBtn();
+  // Load earnedAch from storage
+  try {
+    const raw = localStorage.getItem(storageKey());
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d.earnedAch) S.earnedAch = d.earnedAch;
+      if (d.reviews) S.reviews = d.reviews;
+    }
+  } catch(e) {}
+}, 600);
+
+
+// ══════════════════════════════════════════════════════
+// VENUE PHOTO — SVG генератор (работает без сети)
+// Каждое заведение получает уникальную красивую иллюстрацию
+// ══════════════════════════════════════════════════════
+function venuePhotoCSS(v) {
+  // Parse gradient stops from bg
+  const colors = (v.bg.match(/#[0-9a-fA-F]{3,6}/g) || ['#0a0a00','#1a1a00','#2d2600']);
+  const c1 = colors[0] || '#0a0a00';
+  const c2 = colors[colors.length-1] || '#2d2600';
+  const ac = v.ac || '#d4a862';
+  
+  // Generate unique decorative SVG
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 500'>
+    <defs>
+      <linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'>
+        <stop offset='0%25' stop-color='${c1}'/>
+        <stop offset='100%25' stop-color='${c2}'/>
+      </linearGradient>
+      <filter id='bl'><feGaussianBlur stdDeviation='45'/></filter>
+    </defs>
+    <rect width='800' height='500' fill='url(%23g)'/>
+    <circle cx='650' cy='80' r='220' fill='${ac}' opacity='0.07' filter='url(%23bl)'/>
+    <circle cx='120' cy='420' r='180' fill='${ac}' opacity='0.05' filter='url(%23bl)'/>
+    <line x1='0' y1='250' x2='800' y2='250' stroke='${ac}' stroke-opacity='0.04' stroke-width='1'/>
+    <line x1='400' y1='0' x2='400' y2='500' stroke='${ac}' stroke-opacity='0.04' stroke-width='1'/>
+    <text x='400' y='235' text-anchor='middle' dominant-baseline='central' font-size='130' opacity='0.85'>${v.ic}</text>
+    <rect x='350' y='310' width='100' height='3' fill='${ac}' opacity='0.5' rx='1.5'/>
+  </svg>`;
+  
+  const encoded = encodeURIComponent(svg);
+  return `url("data:image/svg+xml,${encoded}"),${v.bg}`;
+}
+
+
+window.addEventListener('load', function() {
+  try { initFB(); } catch(e) { console.warn('Firebase:', e.message); }
+});
+
+</script>
+</body>
+</html>
